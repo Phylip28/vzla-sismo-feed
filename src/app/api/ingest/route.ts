@@ -14,6 +14,7 @@ const supabase = createClient(
 
 const parser = new Parser({
   customFields: { item: ['media:content', 'enclosure'] },
+  requestOptions: { timeout: 8000 },
 })
 
 export async function GET(req: Request) {
@@ -40,7 +41,9 @@ export async function GET(req: Request) {
   for (const fuente of FUENTES) {
     // USGS se maneja aparte (GeoJSON, no RSS)
     if (fuente.url.includes('usgs.gov')) {
-      await ingestUSGS(fuente.nombre)
+      const counts = await ingestUSGS(fuente.nombre)
+      procesadas += counts.procesadas
+      aprobadas += counts.aprobadas
       continue
     }
 
@@ -51,7 +54,8 @@ export async function GET(req: Request) {
         const titulo = item.title ?? ''
         const desc = item.contentSnippet ?? item.summary ?? ''
         const url = item.link ?? ''
-        const pubDate = item.pubDate ? new Date(item.pubDate) : new Date()
+        const pubDateRaw = new Date(item.pubDate ?? '')
+        const pubDate = isNaN(pubDateRaw.getTime()) ? new Date() : pubDateRaw
 
         if (!url || !titulo) continue
 
@@ -80,7 +84,7 @@ export async function GET(req: Request) {
         const resultado = await verificarNoticia(titulo, desc, fuente.nombre)
 
         // 4. Guardar en Supabase (todas, incluyendo rechazadas para auditoría)
-        await supabase.from('noticias').insert({
+        const { error: insertError } = await supabase.from('noticias').insert({
           titulo,
           descripcion: desc.slice(0, 500),
           url,
@@ -93,6 +97,10 @@ export async function GET(req: Request) {
           publicado_at: pubDate.toISOString(),
         })
 
+        if (insertError) {
+          console.error('[ingest] Error insertando:', insertError.message)
+          continue
+        }
         if (resultado.status === 'aprobado') aprobadas++
         else rechazadas++
 
@@ -115,14 +123,18 @@ export async function GET(req: Request) {
 }
 
 // Ingesta especial para datos sísmicos del USGS (GeoJSON)
-async function ingestUSGS(nombreFuente: string) {
+async function ingestUSGS(nombreFuente: string): Promise<{ procesadas: number; aprobadas: number }> {
+  let procesadas = 0
+  let aprobadas = 0
   try {
     const res = await fetch(
-      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson'
+      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson',
+      { signal: AbortSignal.timeout(8000) }
     )
+    if (!res.ok) throw new Error(`USGS error ${res.status}`)
     const data = await res.json()
 
-    for (const feature of data.features) {
+    for (const feature of (data.features ?? [])) {
       const props = feature.properties
       const lugar: string = props.place ?? ''
       const mag: number = props.mag ?? 0
@@ -132,7 +144,9 @@ async function ingestUSGS(nombreFuente: string) {
       // (De Morgan: NOT A AND NOT B ≡ NOT(A OR B)); el || correcto exige ambas condiciones.
       if (!lugar.toLowerCase().includes('venezuela') || mag < 4.0) continue
 
-      const url = props.url
+      const url: string = props.url ?? ''
+      if (!url) continue
+      if (!props.time) continue
       const titulo = `Sismo M${mag.toFixed(1)} — ${lugar}`
       const desc = `Magnitud ${mag}, profundidad ${feature.geometry?.coordinates?.[2] ?? '?'} km. Hora UTC: ${new Date(props.time).toISOString()}`
 
@@ -151,7 +165,8 @@ async function ingestUSGS(nombreFuente: string) {
       }
       if (existe) continue
 
-      await supabase.from('noticias').insert({
+      procesadas++
+      const { error: insertError } = await supabase.from('noticias').insert({
         titulo,
         descripcion: desc,
         url,
@@ -166,8 +181,14 @@ async function ingestUSGS(nombreFuente: string) {
         factcheck_confianza: 99,
         publicado_at: new Date(props.time).toISOString(),
       })
+      if (insertError) {
+        console.error('[ingest] Error insertando USGS:', insertError.message)
+        continue
+      }
+      aprobadas++
     }
   } catch (err) {
     console.error('[ingest] Error USGS:', err)
   }
+  return { procesadas, aprobadas }
 }
