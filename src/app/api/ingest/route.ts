@@ -7,16 +7,18 @@ import Parser from 'rss-parser'
 import { FUENTES, preFiltroPasa } from '@/lib/sources'
 import { verificarNoticia } from '@/lib/factchecker'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // service role para escribir
-)
+export const dynamic = 'force-dynamic'
 
 const parser = new Parser({
   customFields: { item: ['media:content', 'enclosure'] },
+  requestOptions: { timeout: 8000 },
 })
 
 export async function GET(req: Request) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   // Si CRON_SECRET no está definida, la comparación sería `authHeader !== "Bearer undefined"`,
   // lo que permite que cualquiera dispare el cron enviando ese header literal.
   if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
@@ -40,7 +42,9 @@ export async function GET(req: Request) {
   for (const fuente of FUENTES) {
     // USGS se maneja aparte (GeoJSON, no RSS)
     if (fuente.url.includes('usgs.gov')) {
-      await ingestUSGS(fuente.nombre)
+      const counts = await ingestUSGS(supabase, fuente.nombre)
+      procesadas += counts.procesadas
+      aprobadas += counts.aprobadas
       continue
     }
 
@@ -51,7 +55,8 @@ export async function GET(req: Request) {
         const titulo = item.title ?? ''
         const desc = item.contentSnippet ?? item.summary ?? ''
         const url = item.link ?? ''
-        const pubDate = item.pubDate ? new Date(item.pubDate) : new Date()
+        const pubDateRaw = new Date(item.pubDate ?? '')
+        const pubDate = isNaN(pubDateRaw.getTime()) ? new Date() : pubDateRaw
 
         if (!url || !titulo) continue
 
@@ -80,7 +85,7 @@ export async function GET(req: Request) {
         const resultado = await verificarNoticia(titulo, desc, fuente.nombre)
 
         // 4. Guardar en Supabase (todas, incluyendo rechazadas para auditoría)
-        await supabase.from('noticias').insert({
+        const { error: insertError } = await supabase.from('noticias').insert({
           titulo,
           descripcion: desc.slice(0, 500),
           url,
@@ -93,6 +98,10 @@ export async function GET(req: Request) {
           publicado_at: pubDate.toISOString(),
         })
 
+        if (insertError) {
+          console.error('[ingest] Error insertando:', insertError.message)
+          continue
+        }
         if (resultado.status === 'aprobado') aprobadas++
         else rechazadas++
 
@@ -115,14 +124,20 @@ export async function GET(req: Request) {
 }
 
 // Ingesta especial para datos sísmicos del USGS (GeoJSON)
-async function ingestUSGS(nombreFuente: string) {
+// ponytail: supabase passed in — module-level init fails at build time (no env vars)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ingestUSGS(supabase: any, nombreFuente: string): Promise<{ procesadas: number; aprobadas: number }> {
+  let procesadas = 0
+  let aprobadas = 0
   try {
     const res = await fetch(
-      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson'
+      'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson',
+      { signal: AbortSignal.timeout(8000) }
     )
+    if (!res.ok) throw new Error(`USGS error ${res.status}`)
     const data = await res.json()
 
-    for (const feature of data.features) {
+    for (const feature of (data.features ?? [])) {
       const props = feature.properties
       const lugar: string = props.place ?? ''
       const mag: number = props.mag ?? 0
@@ -132,7 +147,9 @@ async function ingestUSGS(nombreFuente: string) {
       // (De Morgan: NOT A AND NOT B ≡ NOT(A OR B)); el || correcto exige ambas condiciones.
       if (!lugar.toLowerCase().includes('venezuela') || mag < 4.0) continue
 
-      const url = props.url
+      const url: string = props.url ?? ''
+      if (!url) continue
+      if (!props.time) continue
       const titulo = `Sismo M${mag.toFixed(1)} — ${lugar}`
       const desc = `Magnitud ${mag}, profundidad ${feature.geometry?.coordinates?.[2] ?? '?'} km. Hora UTC: ${new Date(props.time).toISOString()}`
 
@@ -151,23 +168,29 @@ async function ingestUSGS(nombreFuente: string) {
       }
       if (existe) continue
 
-      await supabase.from('noticias').insert({
+      procesadas++
+      const { error: insertError } = await supabase.from('noticias').insert({
         titulo,
         descripcion: desc,
         url,
         fuente: nombreFuente,
         fuente_tipo: 'oficial',
-        // La magnitud sola no define si algo es réplica — lo define la relación temporal
-        // y espacial con el evento del 24 de junio. Clasificar réplicas correctamente
-        // requeriría comparar epicentro y hora, lo que está fuera del scope de este MVP.
         tag: 'sismo',
-        factcheck_status: 'aprobado', // USGS es fuente oficial, auto-aprobado
+        factcheck_status: 'aprobado',
         factcheck_razon: 'Fuente oficial USGS',
         factcheck_confianza: 99,
         publicado_at: new Date(props.time).toISOString(),
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0],
       })
+      if (insertError) {
+        console.error('[ingest] Error insertando USGS:', insertError.message)
+        continue
+      }
+      aprobadas++
     }
   } catch (err) {
     console.error('[ingest] Error USGS:', err)
   }
+  return { procesadas, aprobadas }
 }

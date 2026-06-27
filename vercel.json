@@ -2,7 +2,12 @@
   "crons": [
     {
       "path": "/api/ingest",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/ingest/route.ts": {
+      "maxDuration": 300
+    }
+  }
 }
