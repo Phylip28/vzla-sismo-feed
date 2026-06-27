@@ -40,7 +40,9 @@ export async function GET(req: Request) {
   for (const fuente of FUENTES) {
     // USGS se maneja aparte (GeoJSON, no RSS)
     if (fuente.url.includes('usgs.gov')) {
-      await ingestUSGS(fuente.nombre)
+      const counts = await ingestUSGS(fuente.nombre)
+      procesadas += counts.procesadas
+      aprobadas += counts.aprobadas
       continue
     }
 
@@ -115,7 +117,9 @@ export async function GET(req: Request) {
 }
 
 // Ingesta especial para datos sísmicos del USGS (GeoJSON)
-async function ingestUSGS(nombreFuente: string) {
+async function ingestUSGS(nombreFuente: string): Promise<{ procesadas: number; aprobadas: number }> {
+  let procesadas = 0
+  let aprobadas = 0
   try {
     const res = await fetch(
       'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson'
@@ -151,6 +155,7 @@ async function ingestUSGS(nombreFuente: string) {
       }
       if (existe) continue
 
+      procesadas++
       await supabase.from('noticias').insert({
         titulo,
         descripcion: desc,
@@ -166,8 +171,10 @@ async function ingestUSGS(nombreFuente: string) {
         factcheck_confianza: 99,
         publicado_at: new Date(props.time).toISOString(),
       })
+      aprobadas++
     }
   } catch (err) {
     console.error('[ingest] Error USGS:', err)
   }
+  return { procesadas, aprobadas }
 }

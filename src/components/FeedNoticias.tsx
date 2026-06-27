@@ -45,12 +45,20 @@ export function FeedNoticias() {
   // Carga inicial
   const cargarFeed = useCallback(async (tag: string) => {
     setCargando(true)
-    const url = tag === 'todos' ? '/api/feed' : `/api/feed?tag=${tag}`
-    const res = await fetch(url)
-    const data = await res.json()
-    setNoticias(data.noticias ?? [])
-    setCargando(false)
-    setNuevasCount(0)
+    try {
+      const url = tag === 'todos' ? '/api/feed' : `/api/feed?tag=${tag}`
+      const res = await fetch(url)
+      // Verificar res.ok antes de parsear: un 500 devuelve JSON pero con {error: "..."},
+      // no con {noticias: [...]}, así que el error quedaría silencioso sin este check.
+      if (!res.ok) throw new Error(`Error del servidor: ${res.status}`)
+      const data = await res.json()
+      setNoticias(data.noticias ?? [])
+    } catch {
+      setNoticias([])
+    } finally {
+      setCargando(false)
+      setNuevasCount(0)
+    }
   }, [])
 
   useEffect(() => {

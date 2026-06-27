@@ -2,8 +2,7 @@
 repomix-output.xml
 
 # Variables de entorno
-repomix-output.xml
-﻿.env.local
+.env.local
 .env
 .env*.local
 
