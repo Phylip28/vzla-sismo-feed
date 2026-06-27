@@ -36,16 +36,23 @@ const TAG_LABELS: Record<string, { label: string; color: string }> = {
   internacional:     { label: 'Internacional',       color: 'bg-slate-100 text-slate-800' },
 }
 
-export function FeedNoticias() {
-  const [noticias, setNoticias] = useState<Noticia[]>([])
+export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
+  const [noticias, setNoticias] = useState<Noticia[]>(initialData ?? [])
   const [tagActivo, setTagActivo] = useState<string>('todos')
   const [cargando, setCargando] = useState(true)
   const [nuevasCount, setNuevasCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const isNewTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const initialLoadDone = useRef(false)
 
   // Carga inicial
   const cargarFeed = useCallback(async (tag: string) => {
+    // noticias aquí es el valor inicial (closure estática) — equivale a initialData.length
+    if (tag === 'todos' && noticias.length > 0 && !initialLoadDone.current) {
+      initialLoadDone.current = true
+      setCargando(false)
+      return
+    }
     setCargando(true)
     setError(null)
     try {
@@ -56,6 +63,7 @@ export function FeedNoticias() {
       if (!res.ok) throw new Error(`Error del servidor: ${res.status}`)
       const data = await res.json()
       setNoticias(data.noticias ?? [])
+      initialLoadDone.current = true
     } catch (err) {
       console.error('[feed] Error cargando feed:', err)
       setError('No se pudo cargar el feed. Intenta de nuevo más tarde.')
@@ -64,7 +72,7 @@ export function FeedNoticias() {
       setCargando(false)
       setNuevasCount(0)
     }
-  }, [])
+  }, []) // ponytail: noticias en closure es intencional — lee el valor inicial (≡ initialData)
 
   useEffect(() => {
     cargarFeed(tagActivo)

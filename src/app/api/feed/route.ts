@@ -41,5 +41,7 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json({ noticias: data ?? [] })
+  return Response.json({ noticias: data ?? [] }, {
+    headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' },
+  })
 }
