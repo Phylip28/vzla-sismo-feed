@@ -1,7 +1,36 @@
+# Herramientas de análisis
+repomix-output.xml
+
+# Variables de entorno
 repomix-output.xml
 ﻿.env.local
 .env
-node_modules/
-.next/
+.env*.local
+
+# Dependencias
+/node_modules
+
+# Next.js
+/.next/
+/out/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# PWA (workbox / next-pwa)
 public/sw.js
 public/workbox-*.js
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+package-lock.json

@@ -17,6 +17,12 @@ const parser = new Parser({
 })
 
 export async function GET(req: Request) {
+  // Si CRON_SECRET no está definida, la comparación sería `authHeader !== "Bearer undefined"`,
+  // lo que permite que cualquiera dispare el cron enviando ese header literal.
+  if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
+    return new Response('Server misconfiguration', { status: 500 })
+  }
+
   // Verificar que es el cron de Vercel (o dev local)
   const authHeader = req.headers.get('authorization')
   if (
@@ -121,8 +127,10 @@ async function ingestUSGS(nombreFuente: string) {
       const lugar: string = props.place ?? ''
       const mag: number = props.mag ?? 0
 
-      // Solo sismos en Venezuela o el Caribe relacionados
-      if (!lugar.toLowerCase().includes('venezuela') && mag < 4.0) continue
+      // Solo sismos que sean en Venezuela Y de magnitud >= 4.0.
+      // Con && la condición dejaría pasar cualquier sismo M4+ del mundo entero
+      // (De Morgan: NOT A AND NOT B ≡ NOT(A OR B)); el || correcto exige ambas condiciones.
+      if (!lugar.toLowerCase().includes('venezuela') || mag < 4.0) continue
 
       const url = props.url
       const titulo = `Sismo M${mag.toFixed(1)} — ${lugar}`
@@ -149,7 +157,10 @@ async function ingestUSGS(nombreFuente: string) {
         url,
         fuente: nombreFuente,
         fuente_tipo: 'oficial',
-        tag: mag >= 4.5 ? 'replicas' : 'sismo',
+        // La magnitud sola no define si algo es réplica — lo define la relación temporal
+        // y espacial con el evento del 24 de junio. Clasificar réplicas correctamente
+        // requeriría comparar epicentro y hora, lo que está fuera del scope de este MVP.
+        tag: 'sismo',
         factcheck_status: 'aprobado', // USGS es fuente oficial, auto-aprobado
         factcheck_razon: 'Fuente oficial USGS',
         factcheck_confianza: 99,

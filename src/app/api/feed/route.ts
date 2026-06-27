@@ -17,11 +17,16 @@ const TAGS_VALIDOS = [
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const tag = searchParams.get('tag')
-  const limit = Math.min(parseInt(searchParams.get('limit') ?? '30'), 50)
+  // parseInt devuelve NaN con input inválido (ej: 'abc'). Math.min(NaN, 50) también es NaN,
+  // y supabase .limit(NaN) falla con error. El fallback a 30 mantiene el comportamiento por defecto.
+  const raw = parseInt(searchParams.get('limit') ?? '30')
+  const limit = Math.min(isNaN(raw) ? 30 : raw, 50)
 
   let query = supabase
     .from('noticias')
-    .select('id, titulo, descripcion, url, fuente, fuente_tipo, tag, publicado_at, factcheck_confianza')
+    // factcheck_status se incluye para que los datos sean consistentes con el tipo Noticia,
+    // que lo requiere para el filtro de Realtime en el cliente (FeedNoticias.tsx).
+    .select('id, titulo, descripcion, url, fuente, fuente_tipo, tag, publicado_at, factcheck_confianza, factcheck_status')
     .eq('factcheck_status', 'aprobado')
     .order('publicado_at', { ascending: false })
     .limit(limit)
