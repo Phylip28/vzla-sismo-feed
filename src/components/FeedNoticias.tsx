@@ -76,7 +76,26 @@ function AlertBanner() {
   )
 }
 
-function EmptyState({ error }: { error?: boolean }) {
+function EmptyState({ error, degraded }: { error?: boolean; degraded?: boolean }) {
+  if (degraded) {
+    return (
+      <div className="text-center py-16 px-4">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+            <path d="M18 14h-8" />
+            <path d="M15 18h-5" />
+            <path d="M10 6h8v4h-8V6Z" />
+          </svg>
+        </div>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Servicio de noticias no configurado</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+          El feed está en modo local. Conecta Supabase para ver noticias verificadas en tiempo real.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="text-center py-16 px-4">
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-4">
@@ -93,7 +112,7 @@ function EmptyState({ error }: { error?: boolean }) {
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
         {error
           ? 'El servicio de noticias no está disponible. Revisa tu conexión o intenta más tarde.'
-          : 'Aún no hay noticias en esta categoría. Activa las notificaciones para enterarte primero.'}
+          : 'Aún no hay noticias en esta categoría.'}
       </p>
     </div>
   )
@@ -113,6 +132,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
   const [cargando, setCargando] = useState(!initialData?.length)
   const [cargandoMas, setCargandoMas] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [degraded, setDegraded] = useState(false)
   const [offset, setOffset] = useState(initialData?.length ?? 0)
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState<number | null>(null)
@@ -151,6 +171,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
   const cargar = useCallback(async (tag: string, q: string) => {
     setCargando(true)
     setError(null)
+    setDegraded(false)
     try {
       const res = await fetch(buildUrl(tag, q, 0, idiomaActivo), { signal: AbortSignal.timeout(10_000) })
       if (!res.ok) throw new Error(`${res.status}`)
@@ -160,6 +181,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
       setTotal(data.total ?? null)
       setOffset(items.length)
       setHasMore(items.length >= LIMIT)
+      if (data.degraded) setDegraded(true)
     } catch {
       setError('No se pudo cargar el feed.')
       setNoticias([])
@@ -184,6 +206,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
         return [...prev, ...items.filter(n => !ids.has(n.id))]
       })
       setOffset(prev => prev + items.length)
+      if (data.degraded) setDegraded(true)
     } catch { /* ignore */ } finally {
       setCargandoMas(false)
     }
@@ -365,7 +388,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
                 ))}
               </div>
             ) : noticias.length === 0 && !error ? (
-              <EmptyState />
+              <EmptyState degraded={degraded} />
             ) : (
               <>
                 <div className="space-y-3">

@@ -64,7 +64,7 @@ export function NumerosEmergencia() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-5 right-5 bg-crisis-red hover:bg-crisis-red-dark text-white px-4 py-3 rounded-full shadow-lg transition-colors z-40 flex items-center gap-2 font-semibold text-small"
+        className="fixed bottom-5 right-5 bg-crisis-red hover:bg-crisis-red-dark text-white px-4 py-3 rounded-full shadow-lg transition-colors z-[60] flex items-center gap-2 font-semibold text-small"
       >
         <PhoneIcon />
         <span className="hidden sm:inline">Emergencias</span>
@@ -73,7 +73,7 @@ export function NumerosEmergencia() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4">
       <div className="bg-white dark:bg-gray-900 w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col animate-fade-in">
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-gray-700 shrink-0">

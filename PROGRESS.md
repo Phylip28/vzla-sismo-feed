@@ -10,7 +10,7 @@
 - Agent skills installed at project scope (`./.agents/skills/`, gitignored; `skills-lock.json` tracked). See Session 002.
 - Frontend visual refresh applied on `feat/agent-skills-frontend`. See Session 003.
 - Current highest-priority unfinished feature: merge `feat/agent-skills-frontend` into `master` after team review, or continue with follow-up UX improvements (e.g. degraded-mode API guard).
-- Current blocker: none for the verification harness. Local Supabase not provisioned (`.env.local` uses placeholders so dev server boots without a real DB; feed shows intentional error empty state in local dev).
+- Current blocker: none for the verification harness. Local Supabase not provisioned (`.env.local` uses placeholders so dev server boots without a real DB; API routes now return fast degraded-mode empty responses in local dev).
 
 ## Session Log
 
@@ -125,3 +125,31 @@
 - Next best step:
   - Review the screenshots and commit `feat/agent-skills-frontend` to `master` when ready.
   - Optional follow-up: implement degraded-mode API responses and wire `SismosUSGS` into a dedicated seismic monitoring page or tab.
+
+### Session 004 — 2026-06-28
+- Date: 2026-06-28
+- Goal: fix the two issues reported by user: (1) slow navigation between sections, and (2) emergency modal hidden behind the map.
+- Diagnosis:
+  - **Slow navigation**: `/api/feed` and `/api/stats` were trying to connect to the placeholder Supabase URL (`https://placeholder.supabase.co`) and timing out on DNS. With `force-dynamic` pages, every route change triggered these slow server fetches, making navigation feel sluggish.
+  - **Modal behind map**: the emergency modal had `z-[100]`, but Leaflet map panes and controls use z-index values up to 1000, so the modal rendered underneath.
+- Fixes applied:
+  - Added `src/lib/env.ts` with `isSupabaseConfigured()` helper (detects missing or placeholder Supabase URL/key) and `supabaseDegradedResponse()`.
+  - Added degraded-mode guards to `/api/feed` and `/api/stats`: when Supabase is not configured, return HTTP 200 with empty data and `{ degraded: true, reason: 'supabase_not_configured' }` immediately.
+  - Updated `FeedNoticias` to detect the `degraded` flag and show a clear empty state: "Servicio de noticias no configurado — El feed está en modo local. Conecta Supabase para ver noticias verificadas en tiempo real."
+  - Added `src/app/loading.tsx` to show a loading spinner during route transitions, improving perceived performance.
+  - Fixed z-index: emergency FAB raised from `z-40` to `z-[60]`; modal overlay raised from `z-[100]` to `z-[1100]` so it always sits above Leaflet.
+- Verification:
+  - `npx tsc --noEmit`: green.
+  - `./init.sh`: green.
+  - Measured response times locally (degraded mode):
+    - `/` 24ms, `/stats` 11ms, `/mapa` 18ms, `/api/feed` 6ms, `/api/stats` 4ms.
+  - Playwright MCP screenshot confirmed the emergency modal now renders on top of the map.
+- Commits (pending):
+  - `fix(ui): raise modal z-index above leaflet and add degraded-mode api guards for faster navigation`
+- Files or artifacts updated: `src/lib/env.ts`, `src/app/api/feed/route.ts`, `src/app/api/stats/route.ts`, `src/components/FeedNoticias.tsx`, `src/components/NumerosEmergencia.tsx`, `src/app/loading.tsx`, `PROGRESS.md`.
+- Known risk or unresolved issue:
+  - Degraded mode is triggered by placeholder values in `.env.local`. In production with real Supabase credentials, the routes will fetch normally.
+  - `SismosUSGS` remains unmounted; navigation speed issue is unrelated to it.
+- Next best step:
+  - Review and merge `feat/agent-skills-frontend` into `master`.
+  - Optional follow-up: wire `SismosUSGS` into a page or tab.
