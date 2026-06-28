@@ -69,7 +69,6 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
   const [total, setTotal] = useState<number | null>(null)
   const [nuevasCount, setNuevasCount] = useState(0)
   const [statsLabel, setStatsLabel] = useState<string>('')
-  const [view, setView] = useState<'feed' | 'medios'>('feed')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -233,32 +232,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
         ))}
       </div>
 
-      {/* Tab switcher */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-4">
-        <button
-          onClick={() => setView('feed')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
-            view === 'feed'
-              ? 'bg-white shadow-sm text-gray-900'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Feed General
-        </button>
-        <button
-          onClick={() => setView('medios')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
-            view === 'medios'
-              ? 'bg-white shadow-sm text-gray-900'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Medios Oficiales
-        </button>
-      </div>
-
-      {view === 'feed' ? (
-        <>
+      <>
           {/* Banner de nuevas noticias */}
           {nuevasCount > 0 && (
             <button
@@ -409,67 +383,7 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
               </div>
             </>
           )}
-        </>
-      ) : (
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
-            <h3 className="text-sm font-bold text-blue-900 mb-1">Timeline de Medios Oficiales</h3>
-            <p className="text-xs text-blue-700">Integración con perfiles verificados (ej. @Funvisis, @PCivil_Ve, etc.).</p>
-          </div>
-          <div className="relative border-l border-gray-200 ml-3 space-y-6 pb-4">
-            {noticias
-              .filter(n => n.fuente.startsWith('@'))
-              .map((n) => {
-                let icon = '📰'
-                let colorClass = 'bg-blue-100'
-                if (n.fuente.includes('PCivil_Ve') || n.fuente.includes('bomberos')) {
-                  icon = '🚨'
-                  colorClass = 'bg-orange-100'
-                } else if (n.fuente.includes('CruzRoja')) {
-                  icon = '🏥'
-                  colorClass = 'bg-red-100'
-                } else if (n.fuente.includes('Funvisis') || n.fuente.includes('usembassy') || n.fuente.includes('nayibbukele')) {
-                  icon = '🏛️'
-                  colorClass = 'bg-blue-100'
-                } else {
-                  icon = 'ℹ️'
-                  colorClass = 'bg-gray-100'
-                }
-                return (
-                  <div key={`timeline-${n.id}`} className="relative pl-6">
-                    <span className={`absolute -left-3 top-0 w-6 h-6 rounded-full ${colorClass} border-4 border-white flex items-center justify-center text-[10px]`}>
-                      {icon}
-                    </span>
-                    <a href={n.url} target="_blank" rel="noopener noreferrer" className="block bg-white border border-gray-100 p-3 rounded-lg shadow-sm hover:border-blue-300 transition-colors">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-bold text-gray-900">{n.fuente}</span>
-                        <span className="text-xs text-gray-400">{tiempoRelativo(n.publicado_at)}</span>
-                      </div>
-                      <p className="text-sm text-gray-800">{n.titulo}</p>
-                      {n.descripcion && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-3">{n.descripcion}</p>
-                      )}
-                      <div className="mt-2 text-[10px] text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-0.5 rounded">
-                        Verificado por cuenta oficial ({n.factcheck_confianza}%)
-                      </div>
-                    </a>
-                  </div>
-                )
-              })}
-            {noticias.filter(n => n.fuente.startsWith('@')).length === 0 && !cargando && (
-              <div className="pl-6 text-sm text-gray-400 italic py-4">
-                No hay actualizaciones recientes de las cuentas oficiales.
-              </div>
-            )}
-            {cargando && (
-              <div className="pl-6 space-y-3 py-4">
-                <div className="h-20 bg-gray-100 rounded-lg animate-pulse" />
-                <div className="h-20 bg-gray-100 rounded-lg animate-pulse" />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </>
     </div>
   )
 }
