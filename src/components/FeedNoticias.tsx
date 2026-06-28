@@ -18,16 +18,18 @@ type Noticia = {
   insertedAt?: number
 }
 
-const TAG_META: Record<string, { label: string; border: string; pill: string; short: string }> = {
-  todos:             { label: 'Todas las categorías', border: 'border-l-gray-300',   pill: '',                                                             short: 'Todas' },
-  sismo:             { label: 'Sismo',             border: 'border-l-crisis-red',    pill: 'bg-crisis-red/10 text-crisis-red-dark dark:bg-crisis-red/20 dark:text-crisis-red-light',    short: 'Sismo' },
-  rescate:           { label: 'Rescate',           border: 'border-l-orange-500', pill: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200', short: 'Rescate' },
-  desaparecidos:     { label: 'Desaparecidos',     border: 'border-l-purple-500', pill: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200', short: 'Desap.' },
-  puntos_acopio:     { label: 'Puntos de acopio',  border: 'border-l-green-500',  pill: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200', short: 'Acopio' },
-  ayuda_humanitaria: { label: 'Ayuda humanitaria', border: 'border-l-blue-500',   pill: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200', short: 'Ayuda' },
-  replicas:          { label: 'Réplicas',          border: 'border-l-yellow-500', pill: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200', short: 'Réplicas' },
-  donaciones:        { label: 'Donaciones',        border: 'border-l-teal-500',   pill: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200', short: 'Donar' },
-  internacional:     { label: 'Internacional',     border: 'border-l-slate-500',  pill: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200', short: 'Int.' },
+// Each category carries an accent used as an editorial kicker (uppercase label
+// in the accent colour) and a left rule on the article row — not a filled pill.
+const TAG_META: Record<string, { label: string; border: string; dot: string; text: string; short: string }> = {
+  todos:             { label: 'Todas las categorías', border: 'border-l-ink-muted/40', dot: 'bg-ink-muted',     text: 'text-ink-muted dark:text-ink-muted-dark', short: 'Todas' },
+  sismo:             { label: 'Sismo',                border: 'border-l-crisis-red',   dot: 'bg-crisis-red',    text: 'text-crisis-red',                          short: 'Sismo' },
+  rescate:           { label: 'Rescate',             border: 'border-l-orange-600',   dot: 'bg-orange-600',    text: 'text-orange-700 dark:text-orange-400',     short: 'Rescate' },
+  desaparecidos:     { label: 'Desaparecidos',       border: 'border-l-purple-600',   dot: 'bg-purple-600',    text: 'text-purple-700 dark:text-purple-400',     short: 'Desap.' },
+  puntos_acopio:     { label: 'Puntos de acopio',    border: 'border-l-emerald-600',  dot: 'bg-emerald-600',   text: 'text-emerald-700 dark:text-emerald-400',   short: 'Acopio' },
+  ayuda_humanitaria: { label: 'Ayuda humanitaria',   border: 'border-l-blue-600',     dot: 'bg-blue-600',      text: 'text-blue-700 dark:text-blue-400',         short: 'Ayuda' },
+  replicas:          { label: 'Réplicas',            border: 'border-l-amber-500',    dot: 'bg-amber-500',     text: 'text-amber-700 dark:text-amber-400',       short: 'Réplicas' },
+  donaciones:        { label: 'Donaciones',          border: 'border-l-teal-600',     dot: 'bg-teal-600',      text: 'text-teal-700 dark:text-teal-400',         short: 'Donar' },
+  internacional:     { label: 'Internacional',       border: 'border-l-slate-500',    dot: 'bg-slate-500',     text: 'text-slate-600 dark:text-slate-400',       short: 'Int.' },
 }
 
 const LIMIT = 30
@@ -59,55 +61,36 @@ function SearchIcon() {
   )
 }
 
-function AlertIcon() {
+// Live indicator drawn as an animated seismogram, not a pulsing dot.
+function LiveSeismo({ className = '' }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-      <path d="M12 9v4" />
-      <path d="M12 17h.01" />
-    </svg>
-  )
-}
-
-function NewspaperIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-      <path d="M18 14h-8" />
-      <path d="M15 18h-5" />
-      <path d="M10 6h8v4h-8V6Z" />
-    </svg>
-  )
-}
-
-function AlertBanner() {
-  return (
-    <div className="bg-crisis-red text-white">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex items-center gap-2">
-        <AlertIcon />
-        <p className="text-xs sm:text-sm font-medium">
-          Información verificada en tiempo real — Sismo Venezuela 24 jun
-        </p>
-      </div>
-    </div>
+    <span className={`inline-flex items-end gap-[2px] h-3 ${className}`} aria-hidden="true">
+      {[0, 1, 2, 3].map(i => (
+        <span
+          key={i}
+          className="w-[2px] bg-crisis-red animate-seismo"
+          style={{ height: '100%', animationDelay: `${i * 0.18}s` }}
+        />
+      ))}
+    </span>
   )
 }
 
 function EmptyState({ error, degraded }: { error?: boolean; degraded?: boolean }) {
   return (
-    <div className="text-center py-16 px-6 bg-surface-elevated dark:bg-surface-elevated-dark rounded-xl border border-gray-200 dark:border-gray-800">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-4">
-        <NewspaperIcon />
-      </div>
-      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-        {degraded ? 'Servicio de noticias no configurado' : error ? 'No se pudo cargar el feed' : 'Sin noticias verificadas'}
+    <div className="py-16 px-6 border-t-2 border-ink dark:border-ink-dark bg-panel dark:bg-panel-dark">
+      <p className="text-eyebrow uppercase text-crisis-red mb-3">
+        {degraded ? 'Servicio en modo local' : error ? 'Sin conexión' : 'Sin registros'}
+      </p>
+      <h3 className="font-serif text-headline text-ink dark:text-ink-dark mb-2">
+        {degraded ? 'El boletín no está conectado a la base de datos' : error ? 'No se pudo cargar el boletín' : 'Aún no hay reportes en esta categoría'}
       </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+      <p className="text-small text-ink-muted dark:text-ink-muted-dark max-w-prose">
         {degraded
-          ? 'El feed está en modo local. Conecta Supabase para ver noticias verificadas en tiempo real.'
+          ? 'El feed está en modo local. Conecta Supabase para ver reportes verificados en tiempo real.'
           : error
-            ? 'El servicio de noticias no está disponible. Revisa tu conexión o intenta más tarde.'
-            : 'Aún no hay noticias en esta categoría.'}
+            ? 'El servicio de reportes no está disponible. Revisa tu conexión o vuelve a intentarlo más tarde.'
+            : 'Cuando lleguen nuevos reportes verificados aparecerán aquí.'}
       </p>
     </div>
   )
@@ -260,73 +243,76 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
 
   return (
     <>
-      <AlertBanner />
+      {/* Alert strip — editorial, not a solid red bar */}
+      <div className="border-b border-rule dark:border-rule-dark bg-panel dark:bg-panel-dark">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-2 flex items-center gap-3 text-small">
+          <span className="text-eyebrow uppercase text-crisis-red shrink-0">Alerta</span>
+          <span className="h-3 w-px bg-rule dark:bg-rule-dark shrink-0" />
+          <p className="text-ink-muted dark:text-ink-muted-dark truncate">
+            Cobertura verificada en tiempo real del sismo del 24 de junio de 2026 en Venezuela.
+          </p>
+        </div>
+      </div>
 
-      {/* Hero */}
-      <section className="border-b border-gray-200 dark:border-gray-800 bg-surface-elevated dark:bg-surface-elevated-dark">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-crisis-red/10 text-crisis-red dark:bg-crisis-red/20 dark:text-crisis-red-light text-caption font-semibold mb-4">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-crisis-red opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-crisis-red" />
-                </span>
-                En vivo
-              </div>
-              <h1 className="text-hero text-gray-900 dark:text-white mb-3">
-                Venezuela — Sismo 24 jun
-              </h1>
-              <p className="text-lead text-gray-600 dark:text-gray-300">
-                Feed de noticias verificadas sobre el terremoto del 24 de junio de 2026. Información oficial, reportes de emergencia y recursos para afectados.
-              </p>
-            </div>
-            <div className="flex items-center gap-4 lg:pb-1">
-              <div className="text-right">
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{total ?? '—'}</p>
-                <p className="text-caption text-gray-500 dark:text-gray-400">noticias verificadas</p>
-              </div>
-              <div className="h-10 w-px bg-gray-200 dark:bg-gray-700" />
-              <div className="text-right">
-                <p className="text-3xl font-bold text-crisis-red">24</p>
-                <p className="text-caption text-gray-500 dark:text-gray-400">jun 2026</p>
-              </div>
-            </div>
+      {/* Masthead / hero */}
+      <section className="border-b-2 border-ink dark:border-ink-dark bg-paper dark:bg-paper-dark">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 lg:pt-14 pb-6 lg:pb-8">
+          <div className="flex items-center gap-3 mb-5">
+            <LiveSeismo />
+            <span className="text-eyebrow uppercase text-ink dark:text-ink-dark">En vivo</span>
+            <span className="h-3 w-px bg-rule dark:bg-rule-dark" />
+            <span className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark">Edición del 24 de junio de 2026</span>
+          </div>
+          <h1 className="font-serif text-masthead text-ink dark:text-ink-dark max-w-5xl text-balance">
+            Terremoto del 24 de junio en Venezuela
+          </h1>
+          <p className="font-serif text-lead text-ink-muted dark:text-ink-muted-dark mt-4 max-w-prose">
+            Reportes verificados, información oficial y recursos de emergencia para las personas afectadas, reunidos en un solo boletín.
+          </p>
+        </div>
+        {/* Status dateline strip */}
+        <div className="border-t border-rule dark:border-rule-dark">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-caption text-ink-muted dark:text-ink-muted-dark tnum">
+            <span><span className="font-semibold text-ink dark:text-ink-dark">{total ?? '—'}</span> reportes verificados</span>
+            <span className="hidden sm:inline h-3 w-px bg-rule dark:bg-rule-dark" />
+            <span>{statsLabel || 'Conectando con fuentes oficiales…'}</span>
+            <span className="hidden sm:inline h-3 w-px bg-rule dark:bg-rule-dark" />
+            <span>Fuentes oficiales, medios y cuentas verificadas</span>
           </div>
         </div>
       </section>
 
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-          {/* Sidebar */}
-          <aside className="lg:w-72 xl:w-80 shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-6">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          {/* Sidebar / editorial index */}
+          <aside className="lg:w-64 xl:w-72 shrink-0">
+            <div className="lg:sticky lg:top-24 space-y-7">
               {/* Buscador */}
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted dark:text-ink-muted-dark">
                   <SearchIcon />
                 </span>
                 <input
                   type="text"
                   value={queryInput}
                   onChange={e => setQueryInput(e.target.value)}
-                  placeholder="Buscar noticias..."
-                  className="w-full pl-9 pr-4 py-2.5 text-small rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-crisis-blue focus:ring-1 focus:ring-crisis-blue transition-colors"
+                  placeholder="Buscar en el boletín…"
+                  className="w-full pl-9 pr-4 py-2.5 text-small rounded-none border-b border-rule-strong dark:border-rule-dark bg-transparent text-ink dark:text-ink-dark placeholder-ink-muted dark:placeholder-ink-muted-dark focus:border-crisis-red transition-colors"
                 />
               </div>
 
               {/* Idioma */}
               <div>
-                <h3 className="text-caption font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-3">Idioma</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-3">Idioma</h3>
+                <div className="flex gap-5">
                   {(['todos', 'es', 'en'] as const).map(lang => (
                     <button
                       key={lang}
                       onClick={() => setIdiomaActivo(lang)}
-                      className={`text-caption px-3 py-1.5 rounded-full border transition-colors ${
+                      className={`text-small pb-0.5 border-b-2 transition-colors ${
                         idiomaActivo === lang
-                          ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100 font-medium'
-                          : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-400'
+                          ? 'border-crisis-red text-ink dark:text-ink-dark font-medium'
+                          : 'border-transparent text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
                       }`}
                     >
                       {lang === 'todos' ? 'Todos' : lang === 'es' ? 'Español' : 'English'}
@@ -335,37 +321,36 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
                 </div>
               </div>
 
-              {/* Tags */}
+              {/* Categorías */}
               <div>
-                <h3 className="text-caption font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider mb-3">Categorías</h3>
-                <div className="flex flex-col gap-1">
-                  {tagList.map(([key, { label, pill, short }]) => (
-                    <button
-                      key={key}
-                      onClick={() => setTagActivo(key)}
-                      className={`
-                        flex items-center justify-between text-left px-3 py-2 rounded-lg text-small transition-colors
-                        ${tagActivo === key
-                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-medium'
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60'}
-                      `}
-                    >
-                      <span>{label}</span>
-                      {pill && key !== 'todos' && (
-                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${pill}`}>
-                          {short}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-3">Secciones</h3>
+                <ul className="-mx-1">
+                  {tagList.map(([key, { label, dot }]) => {
+                    const active = tagActivo === key
+                    return (
+                      <li key={key}>
+                        <button
+                          onClick={() => setTagActivo(key)}
+                          className={`group flex items-center gap-2.5 w-full text-left px-1 py-1.5 text-small transition-colors ${
+                            active
+                              ? 'text-ink dark:text-ink-dark font-medium'
+                              : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? dot : 'bg-rule-strong/40 dark:bg-rule-dark group-hover:bg-ink-muted'}`} />
+                          {label}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
               </div>
 
-              {/* Estado */}
-              <div className="p-4 rounded-xl bg-crisis-red/5 dark:bg-crisis-red/10 border border-crisis-red/10 dark:border-crisis-red/20">
-                <h3 className="text-small font-semibold text-crisis-red-dark dark:text-crisis-red-light mb-1">Estado del servicio</h3>
-                <p className="text-caption text-gray-600 dark:text-gray-300">
-                  {statsLabel || 'Conectando con fuentes oficiales...'}
+              {/* Estado del servicio */}
+              <div className="border-t border-rule dark:border-rule-dark pt-4">
+                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-2">Estado del servicio</h3>
+                <p className="text-caption text-ink-muted dark:text-ink-muted-dark leading-relaxed">
+                  {statsLabel || 'Conectando con fuentes oficiales…'}
                 </p>
               </div>
             </div>
@@ -373,32 +358,26 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
 
           {/* Main feed */}
           <main className="flex-1 min-w-0">
-            {/* Tabs + query label */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full sm:w-auto">
-                <button
-                  onClick={() => setView('feed')}
-                  className={`flex-1 sm:flex-initial px-5 py-1.5 text-small font-medium rounded-md transition-all ${
-                    view === 'feed'
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Feed General
-                </button>
-                <button
-                  onClick={() => setView('medios')}
-                  className={`flex-1 sm:flex-initial px-5 py-1.5 text-small font-medium rounded-md transition-all ${
-                    view === 'medios'
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Medios Oficiales
-                </button>
+            {/* Section switch */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 border-b border-rule dark:border-rule-dark">
+              <div className="flex gap-7">
+                {([['feed', 'Boletín general'], ['medios', 'Medios oficiales']] as const).map(([v, label]) => (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className={`relative pb-3 text-eyebrow uppercase transition-colors ${
+                      view === v
+                        ? 'text-ink dark:text-ink-dark'
+                        : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
+                    }`}
+                  >
+                    {label}
+                    {view === v && <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-crisis-red" />}
+                  </button>
+                ))}
               </div>
               {query && total !== null && (
-                <p className="text-caption text-gray-500 dark:text-gray-400">
+                <p className="text-caption text-ink-muted dark:text-ink-muted-dark pb-3 tnum">
                   {total} resultado{total !== 1 ? 's' : ''} para &ldquo;{query}&rdquo;
                 </p>
               )}
@@ -410,27 +389,31 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
                 {nuevasCount > 0 && (
                   <button
                     onClick={() => { setNuevasCount(0); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    className="w-full mb-5 py-2.5 text-small font-semibold text-white bg-crisis-red rounded-lg hover:bg-crisis-red-dark transition-colors"
+                    className="w-full mb-6 py-2.5 text-eyebrow uppercase text-white bg-crisis-red hover:bg-crisis-red-dark transition-colors flex items-center justify-center gap-2"
                   >
-                    {nuevasCount} nueva{nuevasCount > 1 ? 's' : ''} noticia{nuevasCount > 1 ? 's' : ''} — ver arriba
+                    <LiveSeismo className="[&>span]:bg-white" />
+                    {nuevasCount} nuevo{nuevasCount > 1 ? 's' : ''} reporte{nuevasCount > 1 ? 's' : ''} — ver arriba
                   </button>
                 )}
 
-                {/* Error */}
                 {error && <EmptyState error />}
 
-                {/* Feed */}
+                {/* Feed list */}
                 {cargando ? (
-                  <div className="space-y-4">
+                  <div className="divide-y divide-rule dark:divide-rule-dark border-y border-rule dark:border-rule-dark">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-32 bg-white dark:bg-gray-900 rounded-xl animate-pulse border border-gray-100 dark:border-gray-800" />
+                      <div key={i} className="py-6 animate-pulse">
+                        <div className="h-3 w-32 bg-rule dark:bg-rule-dark mb-3" />
+                        <div className="h-5 w-3/4 bg-rule dark:bg-rule-dark mb-2" />
+                        <div className="h-4 w-1/2 bg-rule dark:bg-rule-dark" />
+                      </div>
                     ))}
                   </div>
                 ) : noticias.length === 0 && !error ? (
                   <EmptyState degraded={degraded} />
                 ) : (
                   <>
-                    <div className="space-y-4">
+                    <div className="border-t border-rule dark:border-rule-dark">
                       {noticias.map(n => {
                         const meta = TAG_META[n.tag]
                         return (
@@ -440,115 +423,108 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`
-                              group block p-5 rounded-xl border bg-white dark:bg-gray-900
-                              border-gray-200 dark:border-gray-800
-                              border-l-[3px] ${meta?.border ?? 'border-l-gray-300'}
-                              hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-soft transition-all
-                              ${isNuevo(n) ? 'ring-1 ring-crisis-red/30' : ''}
+                              group block border-b border-rule dark:border-rule-dark
+                              border-l-2 ${meta?.border ?? 'border-l-transparent'}
+                              pl-4 sm:pl-5 pr-2 py-6
+                              hover:bg-panel dark:hover:bg-panel-dark transition-colors
+                              ${isNuevo(n) ? 'bg-crisis-red/[0.03] dark:bg-crisis-red/[0.06]' : ''}
                             `}
                           >
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                              <span className="text-caption font-medium text-gray-500 dark:text-gray-400">
-                                {fuenteLabel(n.fuente_tipo, n.fuente)}
-                              </span>
-                              {n.idioma === 'en' && (
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                                  EN
-                                </span>
-                              )}
-                              {meta && meta.pill && (
-                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${meta.pill}`}>
+                            {/* Dateline */}
+                            <div className="flex items-center gap-2.5 mb-2 text-caption tnum">
+                              {meta && (
+                                <span className={`text-eyebrow uppercase ${meta.text}`}>
                                   {meta.label}
                                 </span>
                               )}
-                              {isNuevo(n) && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-crisis-red text-white">
-                                  NUEVO
+                              <span className="h-3 w-px bg-rule dark:bg-rule-dark" />
+                              <span className="font-medium text-ink-muted dark:text-ink-muted-dark">
+                                {fuenteLabel(n.fuente_tipo, n.fuente)}
+                              </span>
+                              {n.idioma === 'en' && (
+                                <span className="text-[10px] font-semibold tracking-wide px-1 py-px border border-rule-strong/40 dark:border-rule-dark text-ink-muted dark:text-ink-muted-dark">
+                                  EN
                                 </span>
                               )}
-                              <span className="text-caption text-gray-400 dark:text-gray-500 ml-auto">
+                              {isNuevo(n) && (
+                                <span className="text-eyebrow uppercase text-crisis-red">Nuevo</span>
+                              )}
+                              <span className="text-ink-muted dark:text-ink-muted-dark ml-auto">
                                 {tiempoRelativo(n.publicado_at)}
                               </span>
                             </div>
-                            <p className="text-headline text-gray-900 dark:text-gray-100 leading-snug mb-2 group-hover:text-crisis-blue transition-colors">
+                            <h2 className="font-serif text-headline text-ink dark:text-ink-dark leading-snug mb-1.5 group-hover:text-crisis-red transition-colors text-balance">
                               {n.titulo}
-                            </p>
+                            </h2>
                             {n.descripcion && (
-                              <p className="text-small text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
+                              <p className="text-small text-ink-muted dark:text-ink-muted-dark line-clamp-2 max-w-prose mb-3">
                                 {n.descripcion}
                               </p>
                             )}
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-green-500 rounded-full"
-                                  style={{ width: `${n.factcheck_confianza}%` }}
-                                />
-                              </div>
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
-                                {n.factcheck_confianza}% verificado
-                              </span>
-                            </div>
+                            <p className="text-caption text-ink-muted dark:text-ink-muted-dark tnum">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 align-middle" />
+                              Verificación {n.factcheck_confianza}%
+                            </p>
                           </a>
                         )
                       })}
                     </div>
                     {/* Sentinel + spinner */}
-                    <div ref={sentinelRef} className="py-6 text-center">
+                    <div ref={sentinelRef} className="py-8 text-center">
                       {cargandoMas && (
-                        <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                        <div className="inline-block w-5 h-5 border-2 border-rule dark:border-rule-dark border-t-crisis-red rounded-full animate-spin" />
                       )}
                       {!hasMore && noticias.length > 0 && (
-                        <p className="text-caption text-gray-400 dark:text-gray-500">No hay más noticias</p>
+                        <p className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark">Fin del boletín</p>
                       )}
                     </div>
                   </>
                 )}
               </>
             ) : (
-              <div className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-xl mb-4">
-                  <h3 className="text-small font-bold text-blue-900 dark:text-blue-100 mb-1">Timeline de Medios Oficiales</h3>
-                  <p className="text-caption text-blue-700 dark:text-blue-300">Actualizaciones de cuentas verificadas como @Funvisis, @PCivil_Ve y @CruzRojaVe.</p>
+              <div>
+                <div className="border-l-2 border-crisis-blue pl-4 mb-6">
+                  <h3 className="font-serif text-headline text-ink dark:text-ink-dark mb-1">Cronología de medios oficiales</h3>
+                  <p className="text-small text-ink-muted dark:text-ink-muted-dark max-w-prose">Actualizaciones de cuentas verificadas como @Funvisis, @PCivil_Ve y @CruzRojaVe.</p>
                 </div>
-                <div className="relative border-l border-gray-200 dark:border-gray-700 ml-3 space-y-6 pb-4">
+                <div className="relative border-l border-rule-strong/30 dark:border-rule-dark ml-2 space-y-6 pb-4">
                   {noticias
                     .filter(n => n.fuente.startsWith('@'))
                     .map((n) => {
-                      let colorClass = 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200'
+                      let dotColor = 'bg-crisis-blue'
                       if (n.fuente.includes('PCivil_Ve') || n.fuente.includes('bomberos')) {
-                        colorClass = 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-200'
+                        dotColor = 'bg-orange-600'
                       } else if (n.fuente.includes('CruzRoja')) {
-                        colorClass = 'bg-crisis-red/10 dark:bg-crisis-red/30 text-crisis-red-dark dark:text-crisis-red-light'
+                        dotColor = 'bg-crisis-red'
                       }
                       return (
                         <div key={`timeline-${n.id}`} className="relative pl-6">
-                          <span className={`absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${colorClass.replace('text-', 'bg-').split(' ')[0]}`} />
-                          <a href={n.url} target="_blank" rel="noopener noreferrer" className="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-lg shadow-soft hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-caption font-bold text-gray-900 dark:text-white">{n.fuente}</span>
-                              <span className="text-caption text-gray-400 dark:text-gray-500">{tiempoRelativo(n.publicado_at)}</span>
+                          <span className={`absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full ring-4 ring-paper dark:ring-paper-dark ${dotColor}`} />
+                          <a href={n.url} target="_blank" rel="noopener noreferrer" className="group block">
+                            <div className="flex justify-between items-baseline mb-1 text-caption tnum">
+                              <span className="font-semibold text-ink dark:text-ink-dark">{n.fuente}</span>
+                              <span className="text-ink-muted dark:text-ink-muted-dark">{tiempoRelativo(n.publicado_at)}</span>
                             </div>
-                            <p className="text-small text-gray-800 dark:text-gray-200">{n.titulo}</p>
+                            <p className="font-serif text-small text-ink dark:text-ink-dark group-hover:text-crisis-red transition-colors">{n.titulo}</p>
                             {n.descripcion && (
-                              <p className="text-caption text-gray-500 dark:text-gray-400 mt-1 line-clamp-3">{n.descripcion}</p>
+                              <p className="text-caption text-ink-muted dark:text-ink-muted-dark mt-1 line-clamp-3 max-w-prose">{n.descripcion}</p>
                             )}
-                            <div className="mt-2 text-[10px] text-crisis-blue dark:text-crisis-blue-light font-semibold bg-blue-50 dark:bg-blue-900/30 inline-block px-2 py-0.5 rounded">
-                              Verificado por cuenta oficial ({n.factcheck_confianza}%)
-                            </div>
+                            <p className="mt-1.5 text-eyebrow uppercase text-crisis-blue">
+                              Cuenta oficial · verificación {n.factcheck_confianza}%
+                            </p>
                           </a>
                         </div>
                       )
                     })}
                   {noticias.filter(n => n.fuente.startsWith('@')).length === 0 && !cargando && (
-                    <div className="pl-6 text-small text-gray-400 dark:text-gray-500 italic py-4">
+                    <div className="pl-6 text-small text-ink-muted dark:text-ink-muted-dark italic py-4">
                       No hay actualizaciones recientes de las cuentas oficiales.
                     </div>
                   )}
                   {cargando && (
-                    <div className="pl-6 space-y-3 py-4">
-                      <div className="h-20 bg-white dark:bg-gray-900 rounded-lg animate-pulse border border-gray-100 dark:border-gray-800" />
-                      <div className="h-20 bg-white dark:bg-gray-900 rounded-lg animate-pulse border border-gray-100 dark:border-gray-800" />
+                    <div className="pl-6 space-y-4 py-2">
+                      <div className="h-12 bg-rule/60 dark:bg-rule-dark/60 animate-pulse" />
+                      <div className="h-12 bg-rule/60 dark:bg-rule-dark/60 animate-pulse" />
                     </div>
                   )}
                 </div>

@@ -64,7 +64,7 @@ export function NumerosEmergencia() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-5 right-5 bg-crisis-red hover:bg-crisis-red-dark text-white px-4 py-3 rounded-full shadow-lift transition-colors z-[60] flex items-center gap-2 font-semibold text-small"
+        className="fixed bottom-5 right-5 bg-crisis-red hover:bg-crisis-red-dark text-white px-5 py-3 shadow-lift transition-colors z-[60] flex items-center gap-2.5 text-eyebrow uppercase"
       >
         <PhoneIcon />
         <span className="hidden sm:inline">Emergencias</span>
@@ -73,20 +73,21 @@ export function NumerosEmergencia() {
   }
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4">
-      <div className="bg-white dark:bg-gray-900 w-full sm:max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col animate-fade-in">
+    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center bg-ink/70 backdrop-blur-sm sm:p-4">
+      <div className="bg-panel dark:bg-panel-dark w-full sm:max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] sm:rounded-none shadow-2xl flex flex-col animate-fade-in border-t-4 border-crisis-red">
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+        <div className="flex items-start justify-between p-5 border-b border-rule dark:border-rule-dark shrink-0">
           <div>
-            <h2 className="text-title text-gray-900 dark:text-white flex items-center gap-2">
+            <p className="text-eyebrow uppercase text-crisis-red mb-1.5 flex items-center gap-2">
               <WarningIcon />
-              Directorio de Emergencia
-            </h2>
-            <p className="text-caption text-gray-500 dark:text-gray-400 mt-1">Presiona un número para llamar</p>
+              Directorio de emergencia
+            </p>
+            <h2 className="font-serif text-headline text-ink dark:text-ink-dark">Líneas oficiales de atención</h2>
+            <p className="text-caption text-ink-muted dark:text-ink-muted-dark mt-1">Toca un número para llamar</p>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark hover:bg-rule/50 dark:hover:bg-rule-dark/50 transition-colors"
             aria-label="Cerrar"
           >
             <CloseIcon />

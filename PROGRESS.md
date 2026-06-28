@@ -4,7 +4,7 @@
 - Repository root: `/home/phylip/Downloads/vzla-sismo-feed`
 - Standard startup path: `./init.sh` (pwd, Node check, `npm ci`, `npx tsc --noEmit`, `npm run build`, PWA artifact check)
 - Standard verification path: `./init.sh` from a clean state. Last run: green.
-- Current branch: `feat/agent-skills-frontend` (rediseño visual aplicado, listo para revisión).
+- Current branch: `feat/agent-skills-frontend` (rediseño editorial "boletín sísmico" aplicado en Session 006, listo para revisión).
 - Node: v24.14.1 (local). Engine pin: `>=20.0.0` covers the team baseline.
 - npm: 11.14.1 (local). Team baseline: 11.13.0. Engine pin: `>=11.0.0`.
 - Agent skills installed at project scope (`./.agents/skills/`, gitignored; `skills-lock.json` tracked). See Session 002.
@@ -189,3 +189,37 @@
 - Next best step:
   - Review and merge `feat/agent-skills-frontend` into `master`.
   - Optional follow-up: integrate dark-mode map tiles and wire `SismosUSGS` into a dedicated page.
+
+### Session 006 — 2026-06-28
+- Date: 2026-06-28
+- Goal: redesign the UI to look more professional and less "AI-generated" per user feedback. Scope limited to structure and visual design only — no backend changes, no changes to the information displayed.
+- Diagnosis (grounded in the installed `frontend-design` and `web-typography` skills): the previous design carried the common AI "tells" — a pulsing red "En vivo" dot, a big-number hero stat block (the skill literally calls this "the template answer"), rounded pill badges everywhere, green confidence progress bars, a two-tone "VenezuelaSismo" wordmark, and Inter used as a neutral delivery font.
+- Design direction chosen: an editorial "boletín de emergencia / observatorio sísmico" identity grounded in the subject (a Venezuelan civil-emergency news service).
+  - **Typography**: editorial pairing via `next/font/google` (self-hosted, `display: swap`, no new npm dependency) — `Newsreader` (news serif) for the masthead, headlines and article titles; `Inter` kept as the workhorse sans for UI, data and labels. Exposed as `--font-serif` / `--font-sans` CSS variables and mapped in Tailwind.
+  - **Palette**: cool neutral "paper" (`#F4F4F2` / dark `#121317`), near-black `ink`, hairline `rule` borders, and a single institutional accent red (`#B5121B`) used only for the top alert rule, live status and active states. Deliberately not the warm-cream-plus-serif AI cluster.
+  - **Signature element**: a seismogram motif — a static trace in the masthead nameplate and an animated bar trace as the live indicator (replacing the pulsing dot).
+  - **Layout**: masthead nameplate with eyebrow + date; editorial hero with serif headline, dek and a ruled status dateline strip (keeps the total count as inline data, not a giant number); article feed converted from rounded cards to a ruled editorial list with category kickers (uppercase, in the accent colour), datelines, and verification shown as a small dot + "Verificación NN%" text instead of a green bar; sidebar restyled as an editorial index (underline tabs, ruled sections); stats page rebuilt as a serif total + ruled data table; map and loading states aligned.
+- Files changed:
+  - `src/app/layout.tsx`: `next/font/google` setup for Newsreader + Inter; body uses `paper`/`ink` tokens.
+  - `tailwind.config.js`: editorial `paper`/`panel`/`ink`/`rule` colour system, serif/sans/display font families on CSS vars, masthead/hero/eyebrow type tokens, `seismo` keyframe, refreshed shadows. Kept `surface`/`crisis` aliases for back-compat.
+  - `src/app/globals.css`: base typography tied to the new tokens, `tnum` tabular-figures utility, focus rings in accent red.
+  - `src/components/Navbar.tsx`: masthead with seismograph nameplate, uppercase underline nav, top alert rule.
+  - `src/components/FeedNoticias.tsx`: editorial hero, alert strip, sidebar index, ruled article list, animated seismograph live indicator, editorial empty/loading states. All displayed data preserved (source, language, category, NUEVO, relative time, confidence %).
+  - `src/app/stats/page.tsx`: serif total + ruled distribution table.
+  - `src/components/MapaSismos.tsx` and `src/app/mapa/page.tsx`: editorial header and loading copy.
+  - `src/components/NumerosEmergencia.tsx`: squared institutional FAB and modal header with eyebrow + serif title.
+  - `src/app/loading.tsx`: editorial route-transition state.
+- Verification:
+  - `npx tsc --noEmit`: green.
+  - `./init.sh`: green (typecheck, build 6/6 static pages, PWA artifacts). Build emits a non-fatal `Failed to find font override values for font 'Newsreader'` warning (next/font cannot auto-generate fallback metric overrides for this family); the font loads and renders correctly.
+  - Playwright MCP screenshots captured (feed light/dark, stats, mobile) and reviewed; temporary mock feed data was injected into `/api/feed` only to verify card rendering and then reverted with `git checkout` (backend untouched).
+- Commits (pending):
+  - `feat(ui): editorial boletín redesign with news serif, masthead, and ruled article list`
+- Files or artifacts updated: `src/app/layout.tsx`, `tailwind.config.js`, `src/app/globals.css`, `src/components/Navbar.tsx`, `src/components/FeedNoticias.tsx`, `src/app/stats/page.tsx`, `src/components/MapaSismos.tsx`, `src/app/mapa/page.tsx`, `src/components/NumerosEmergencia.tsx`, `src/app/loading.tsx`, `PROGRESS.md`.
+- Known risk or unresolved issue:
+  - The `Newsreader` font-override build warning is cosmetic but noisy; if it becomes a concern, switch to `next/font/local` with self-hosted WOFF2 files, or pick a family with known metric overrides. The redesign also adds a build-time dependency on Google Fonts being reachable (next/font fetches at build, then self-hosts).
+  - Emergency modal interior cards still use the legacy `surface`/gray tokens; visually consistent but could be migrated to the `panel`/`rule` system in a follow-up.
+  - `NumerosEmergencia` FAB can overlap the last feed card on narrow desktop widths (pre-existing floating-button behaviour).
+- Next best step:
+  - Review the redesign and merge `feat/agent-skills-frontend` into `master`.
+  - Optional follow-ups: resolve the font-override warning, migrate the emergency modal cards to the new tokens, and integrate dark-mode map tiles.

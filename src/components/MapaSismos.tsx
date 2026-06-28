@@ -53,16 +53,17 @@ export function MapaSismos() {
   }, [supabase])
 
   return (
-    <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
-      <header className="mb-6">
-        <h1 className="text-display text-gray-900 dark:text-white">
-          Mapa de sismos registrados
+    <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-14">
+      <header className="border-b-2 border-ink dark:border-ink-dark pb-6 mb-6">
+        <p className="text-eyebrow uppercase text-crisis-red mb-3">Mapa sísmico</p>
+        <h1 className="font-serif text-display text-ink dark:text-ink-dark">
+          Eventos registrados por fuentes oficiales
         </h1>
-        <p className="text-lead text-gray-600 dark:text-gray-300 mt-2 max-w-3xl">
-          Visualización geográfica de eventos sísmicos reportados por fuentes oficiales. Últimos {sismos.length} registros disponibles.
+        <p className="text-lead text-ink-muted dark:text-ink-muted-dark mt-3 max-w-prose">
+          Ubicación geográfica de los sismos reportados. {sismos.length} registros disponibles.
         </p>
       </header>
-      <div style={{ height: '70vh' }} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-soft">
+      <div style={{ height: '70vh' }} className="overflow-hidden border border-rule-strong/30 dark:border-rule-dark">
         <MapContainer
           center={[10.48, -66.90]}
           zoom={6}
