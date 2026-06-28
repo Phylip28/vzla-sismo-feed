@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${serif.variable} ${sans.variable}`}>
+    <html lang="es" className={`dark ${serif.variable} ${sans.variable}`}>
       <body className="bg-paper dark:bg-paper-dark text-ink dark:text-ink-dark min-h-screen font-sans antialiased">
         <Navbar />
         {children}

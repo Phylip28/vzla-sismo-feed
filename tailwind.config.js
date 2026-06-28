@@ -11,11 +11,11 @@ module.exports = {
         // Editorial surface system — cool neutral "paper", not warm cream.
         paper: {
           DEFAULT: '#F4F4F2',
-          dark: '#121317',
+          dark: '#0D0D0D',
         },
         panel: {
           DEFAULT: '#FFFFFF',
-          dark: '#1A1B20',
+          dark: '#161616',
         },
         ink: {
           DEFAULT: '#17171A',
@@ -30,7 +30,7 @@ module.exports = {
         },
         // Single institutional accent — used as an alert rule and live status only.
         crisis: {
-          red: '#B5121B',
+          red: '#CF1020',
           'red-light': '#DC2626',
           'red-dark': '#8A0E15',
           'red-darker': '#6B0B11',

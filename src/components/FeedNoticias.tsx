@@ -18,21 +18,29 @@ type Noticia = {
   insertedAt?: number
 }
 
-// Each category carries an accent used as an editorial kicker (uppercase label
-// in the accent colour) and a left rule on the article row — not a filled pill.
-const TAG_META: Record<string, { label: string; border: string; dot: string; text: string; short: string }> = {
-  todos:             { label: 'Todas las categorías', border: 'border-l-ink-muted/40', dot: 'bg-ink-muted',     text: 'text-ink-muted dark:text-ink-muted-dark', short: 'Todas' },
-  sismo:             { label: 'Sismo',                border: 'border-l-crisis-red',   dot: 'bg-crisis-red',    text: 'text-crisis-red',                          short: 'Sismo' },
-  rescate:           { label: 'Rescate',             border: 'border-l-orange-600',   dot: 'bg-orange-600',    text: 'text-orange-700 dark:text-orange-400',     short: 'Rescate' },
-  desaparecidos:     { label: 'Desaparecidos',       border: 'border-l-purple-600',   dot: 'bg-purple-600',    text: 'text-purple-700 dark:text-purple-400',     short: 'Desap.' },
-  puntos_acopio:     { label: 'Puntos de acopio',    border: 'border-l-emerald-600',  dot: 'bg-emerald-600',   text: 'text-emerald-700 dark:text-emerald-400',   short: 'Acopio' },
-  ayuda_humanitaria: { label: 'Ayuda humanitaria',   border: 'border-l-blue-600',     dot: 'bg-blue-600',      text: 'text-blue-700 dark:text-blue-400',         short: 'Ayuda' },
-  replicas:          { label: 'Réplicas',            border: 'border-l-amber-500',    dot: 'bg-amber-500',     text: 'text-amber-700 dark:text-amber-400',       short: 'Réplicas' },
-  donaciones:        { label: 'Donaciones',          border: 'border-l-teal-600',     dot: 'bg-teal-600',      text: 'text-teal-700 dark:text-teal-400',         short: 'Donar' },
-  internacional:     { label: 'Internacional',       border: 'border-l-slate-500',    dot: 'bg-slate-500',     text: 'text-slate-600 dark:text-slate-400',       short: 'Int.' },
+// Color text + left border per category. No pill backgrounds.
+const TAG_META: Record<string, { label: string; border: string; text: string; short: string }> = {
+  todos:             { label: 'Todas las categorías', border: 'border-l-[#444]',       text: 'text-[#888]',        short: 'Todas'    },
+  sismo:             { label: 'Sismo',                border: 'border-l-[#CF1020]',    text: 'text-[#CF1020]',     short: 'Sismo'    },
+  rescate:           { label: 'Rescate',              border: 'border-l-[#F97316]',    text: 'text-[#F97316]',     short: 'Rescate'  },
+  desaparecidos:     { label: 'Desaparecidos',        border: 'border-l-[#A855F7]',    text: 'text-[#A855F7]',     short: 'Desap.'   },
+  puntos_acopio:     { label: 'Puntos de acopio',     border: 'border-l-[#22C55E]',    text: 'text-[#22C55E]',     short: 'Acopio'   },
+  ayuda_humanitaria: { label: 'Ayuda humanitaria',    border: 'border-l-[#3B82F6]',    text: 'text-[#3B82F6]',     short: 'Ayuda'    },
+  replicas:          { label: 'Réplicas',             border: 'border-l-[#EAB308]',    text: 'text-[#EAB308]',     short: 'Réplicas' },
+  donaciones:        { label: 'Donaciones',           border: 'border-l-[#14B8A6]',    text: 'text-[#14B8A6]',     short: 'Donar'    },
+  internacional:     { label: 'Internacional',        border: 'border-l-[#94A3B8]',    text: 'text-[#94A3B8]',     short: 'Int.'     },
 }
 
 const LIMIT = 30
+
+const RESUMEN_DATOS = [
+  { num: 'M7.2 + M7.5',        label: 'Doblete sísmico',   red: false },
+  { num: '40 seg',              label: 'Entre sismos',      red: false },
+  { num: 'Yaracuy / Carabobo', label: 'Epicentro',         red: false },
+  { num: '~920',               label: 'Muertos (aprox.)',  red: true  },
+  { num: '~3.360',             label: 'Heridos',           red: true  },
+  { num: '+50.000',            label: 'Desaparecidos',     red: true  },
+]
 
 function tiempoRelativo(iso: string) {
   const date = new Date(iso)
@@ -54,44 +62,63 @@ function fuenteLabel(tipo: string, fuente: string) {
 
 function SearchIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m21 21-4.34-4.34" />
       <circle cx="11" cy="11" r="8" />
     </svg>
   )
 }
 
-// Live indicator drawn as an animated seismogram, not a pulsing dot.
-function LiveSeismo({ className = '' }: { className?: string }) {
+function EmptyState({ error, degraded }: { error?: boolean; degraded?: boolean }) {
   return (
-    <span className={`inline-flex items-end gap-[2px] h-3 ${className}`} aria-hidden="true">
-      {[0, 1, 2, 3].map(i => (
-        <span
-          key={i}
-          className="w-[2px] bg-crisis-red animate-seismo"
-          style={{ height: '100%', animationDelay: `${i * 0.18}s` }}
-        />
-      ))}
-    </span>
+    <div className="py-16 px-6 border border-[#222] border-l-[3px] border-l-[#CF1020] bg-[#161616]">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-crisis-red mb-3">
+        {degraded ? 'Servicio en modo local' : error ? 'Sin conexión' : 'Sin registros'}
+      </p>
+      <h3 className="font-serif font-semibold text-white text-lg mb-2">
+        {degraded
+          ? 'El boletín no está conectado a la base de datos'
+          : error
+            ? 'No se pudo cargar el boletín'
+            : 'Aún no hay reportes en esta categoría'}
+      </h3>
+      <p className="font-mono text-xs text-[#666] max-w-prose">
+        {degraded
+          ? 'Conecta Supabase para ver reportes verificados en tiempo real.'
+          : error
+            ? 'El servicio no está disponible. Revisa tu conexión o intenta más tarde.'
+            : 'Cuando lleguen nuevos reportes verificados aparecerán aquí.'}
+      </p>
+    </div>
   )
 }
 
-function EmptyState({ error, degraded }: { error?: boolean; degraded?: boolean }) {
+function ResumenEvento() {
+  const [open, setOpen] = useState(true)
   return (
-    <div className="py-16 px-6 border-t-2 border-ink dark:border-ink-dark bg-panel dark:bg-panel-dark">
-      <p className="text-eyebrow uppercase text-crisis-red mb-3">
-        {degraded ? 'Servicio en modo local' : error ? 'Sin conexión' : 'Sin registros'}
-      </p>
-      <h3 className="font-serif text-headline text-ink dark:text-ink-dark mb-2">
-        {degraded ? 'El boletín no está conectado a la base de datos' : error ? 'No se pudo cargar el boletín' : 'Aún no hay reportes en esta categoría'}
-      </h3>
-      <p className="text-small text-ink-muted dark:text-ink-muted-dark max-w-prose">
-        {degraded
-          ? 'El feed está en modo local. Conecta Supabase para ver reportes verificados en tiempo real.'
-          : error
-            ? 'El servicio de reportes no está disponible. Revisa tu conexión o vuelve a intentarlo más tarde.'
-            : 'Cuando lleguen nuevos reportes verificados aparecerán aquí.'}
-      </p>
+    <div className="bg-[#161616] border border-[#2A2A2A] p-4 mb-4">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-[#999] transition-colors"
+      >
+        <span>Resumen del evento</span>
+        <span>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 mt-3">
+            {RESUMEN_DATOS.map(({ num, label, red }) => (
+              <div key={label}>
+                <p className={`font-mono text-xl font-bold ${red ? 'text-crisis-red' : 'text-white'}`}>{num}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#555] mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="font-mono text-[10px] text-[#444] mt-3">
+            Cifras provisionales · 28 jun 2026 · Fuente: medios verificados
+          </p>
+        </>
+      )}
     </div>
   )
 }
@@ -116,12 +143,33 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
   const [total, setTotal] = useState<number | null>(null)
   const [nuevasCount, setNuevasCount] = useState(0)
   const [statsLabel, setStatsLabel] = useState<string>('')
-  const [view, setView] = useState<'feed' | 'medios'>('feed')
+
+  // Feature 1: copy feedback per card
+  const [copiadoId, setCopiadoId] = useState<string | null>(null)
+  // Feature 3: replica toast
+  const [replicaToast, setReplicaToast] = useState<string | null>(null)
+  // Feature 5: browser notifications
+  const [notifPermiso, setNotifPermiso] = useState<NotificationPermission | 'unsupported'>('default')
+  const notifPermisoRef = useRef<NotificationPermission | 'unsupported'>('default')
+  // Feature 6: export feedback
+  const [exportado, setExportado] = useState(false)
 
   const sentinelRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isNewTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  // Keep notifPermisoRef in sync so the Supabase closure always reads current value
+  useEffect(() => { notifPermisoRef.current = notifPermiso }, [notifPermiso])
+
+  // Feature 5: detect notification support and current permission on mount
+  useEffect(() => {
+    if (typeof Notification === 'undefined') {
+      setNotifPermiso('unsupported')
+    } else {
+      setNotifPermiso(Notification.permission)
+    }
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -228,6 +276,19 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
         isNewTimers.current.push(setTimeout(() => {
           setNoticias(prev => prev.map(n => n.id === nueva.id ? { ...n, isNew: false } : n))
         }, 300_000))
+        // Feature 3: replica toast + vibration
+        if (nueva.tag === 'replicas') {
+          setReplicaToast(nueva.titulo)
+          navigator.vibrate?.(300)
+          setTimeout(() => setReplicaToast(null), 8000)
+        }
+        // Feature 5: browser notification for replicas
+        if (nueva.tag === 'replicas' && notifPermisoRef.current === 'granted') {
+          new Notification('⚠ Réplica — Sismo Venezuela', {
+            body: nueva.titulo,
+            icon: '/icon-192.png',
+          })
+        }
       })
       .subscribe()
     return () => {
@@ -239,300 +300,285 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
 
   const isNuevo = (n: Noticia) => n.isNew && n.insertedAt && Date.now() - n.insertedAt < 300_000
 
+  // Feature 6: export current feed to clipboard
+  const handleExportar = useCallback(() => {
+    const fecha = new Date().toLocaleDateString('es-VE', { dateStyle: 'full' } as Intl.DateTimeFormatOptions)
+    const sep = '──────────────────────────────────────'
+    const bloques = noticias.map(n =>
+      `${sep}\n[${n.tag.toUpperCase()}] ${n.titulo}\n\n${n.fuente} · ${tiempoRelativo(n.publicado_at)}\n\n${n.url}`
+    ).join('\n\n')
+    const texto = `SISMO VENEZUELA — BOLETÍN VERIFICADO\n\n${fecha}\n\n${noticias.length} noticias verificadas\n\n${bloques}`
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(texto).catch(() => {})
+    }
+    setExportado(true)
+    setTimeout(() => setExportado(false), 2000)
+  }, [noticias])
+
   const tagList = Object.entries(TAG_META)
 
   return (
     <>
-      {/* Alert strip — editorial, not a solid red bar */}
-      <div className="border-b border-rule dark:border-rule-dark bg-panel dark:bg-panel-dark">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-2 flex items-center gap-3 text-small">
-          <span className="text-eyebrow uppercase text-crisis-red shrink-0">Alerta</span>
-          <span className="h-3 w-px bg-rule dark:bg-rule-dark shrink-0" />
-          <p className="text-ink-muted dark:text-ink-muted-dark truncate">
-            Cobertura verificada en tiempo real del sismo del 24 de junio de 2026 en Venezuela.
-          </p>
+      {/* Header compacto — una sola línea */}
+      <div className="border-b border-[#1E1E1E] px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-crisis-red animate-pulse shrink-0" />
+          <span className="font-mono text-[11px] tracking-widest text-crisis-red uppercase shrink-0">En vivo</span>
+          <span className="h-3 w-px bg-[#2A2A2A] shrink-0" />
+          <span className="font-mono text-[11px] text-[#666] tracking-wide truncate">
+            Sismo Venezuela · 24 jun 2026
+          </span>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          {statsLabel && (
+            <span className="font-mono text-[11px] text-[#444] tracking-wide hidden sm:block tnum">
+              {statsLabel}
+            </span>
+          )}
+          {/* Feature 5: notification button */}
+          {notifPermiso === 'default' && (
+            <button
+              onClick={() => Notification.requestPermission().then(p => setNotifPermiso(p))}
+              className="font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-white transition-colors"
+            >
+              🔔 Activar alertas
+            </button>
+          )}
+          {notifPermiso === 'granted' && (
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#555]">
+              🔔 Alertas activas
+            </span>
+          )}
+          {/* Feature 6: export button */}
+          <button
+            onClick={handleExportar}
+            className="font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-white transition-colors"
+          >
+            {exportado ? '✓ Copiado' : 'Exportar'}
+          </button>
         </div>
       </div>
 
-      {/* Masthead / hero */}
-      <section className="border-b-2 border-ink dark:border-ink-dark bg-paper dark:bg-paper-dark">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 lg:pt-14 pb-6 lg:pb-8">
-          <div className="flex items-center gap-3 mb-5">
-            <LiveSeismo />
-            <span className="text-eyebrow uppercase text-ink dark:text-ink-dark">En vivo</span>
-            <span className="h-3 w-px bg-rule dark:bg-rule-dark" />
-            <span className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark">Edición del 24 de junio de 2026</span>
+      {/* Barra de filtros */}
+      <div className="border-b border-[#1E1E1E] px-4 sm:px-6 pt-3">
+        {/* Row 1: tags + idioma */}
+        <div className="flex items-end gap-4">
+          {/* Scroll horizontal de categorías */}
+          <div className="flex gap-5 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+            {tagList.map(([key, { short, text }]) => {
+              const active = tagActivo === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setTagActivo(key)}
+                  className={`font-mono text-[10px] uppercase tracking-widest shrink-0 pb-2.5 border-b-2 transition-colors ${
+                    active
+                      ? `border-crisis-red ${text}`
+                      : 'border-transparent text-[#555] hover:text-[#999]'
+                  }`}
+                >
+                  {short}
+                </button>
+              )
+            })}
           </div>
-          <h1 className="font-serif text-masthead text-ink dark:text-ink-dark max-w-5xl text-balance">
-            Terremoto del 24 de junio en Venezuela
-          </h1>
-          <p className="font-serif text-lead text-ink-muted dark:text-ink-muted-dark mt-4 max-w-prose">
-            Reportes verificados, información oficial y recursos de emergencia para las personas afectadas, reunidos en un solo boletín.
+          {/* Filtro de idioma */}
+          <div className="flex gap-4 shrink-0 pb-2.5">
+            {(['es', 'en'] as const).map(lang => (
+              <button
+                key={lang}
+                onClick={() => setIdiomaActivo(idiomaActivo === lang ? 'todos' : lang)}
+                className={`font-mono text-[11px] uppercase tracking-widest transition-colors ${
+                  idiomaActivo === lang ? 'text-white' : 'text-[#555] hover:text-[#999]'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Row 2: buscador */}
+        <div className="relative">
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 text-[#444]">
+            <SearchIcon />
+          </span>
+          <input
+            type="text"
+            value={queryInput}
+            onChange={e => setQueryInput(e.target.value)}
+            placeholder="Buscar noticias…"
+            className="w-full pl-5 pr-4 py-2.5 font-mono text-[11px] tracking-wide bg-transparent border-b border-[#222] text-white placeholder-[#333] focus:border-[#555] focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Contenido principal */}
+      <div className="px-4 sm:px-6 py-6">
+        {/* Feature 2: widget resumen del evento */}
+        <ResumenEvento />
+
+        {query && total !== null && (
+          <p className="font-mono text-[10px] text-[#555] tracking-widest uppercase mb-4 tnum">
+            {total} resultado{total !== 1 ? 's' : ''} para &ldquo;{query}&rdquo;
           </p>
-        </div>
-        {/* Status dateline strip */}
-        <div className="border-t border-rule dark:border-rule-dark">
-          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-caption text-ink-muted dark:text-ink-muted-dark tnum">
-            <span><span className="font-semibold text-ink dark:text-ink-dark">{total ?? '—'}</span> reportes verificados</span>
-            <span className="hidden sm:inline h-3 w-px bg-rule dark:bg-rule-dark" />
-            <span>{statsLabel || 'Conectando con fuentes oficiales…'}</span>
-            <span className="hidden sm:inline h-3 w-px bg-rule dark:bg-rule-dark" />
-            <span>Fuentes oficiales, medios y cuentas verificadas</span>
+        )}
+
+        {/* Banner nuevas noticias */}
+        {nuevasCount > 0 && (
+          <button
+            onClick={() => { setNuevasCount(0); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            className="w-full mb-4 py-2 font-mono text-[11px] uppercase tracking-widest text-white bg-crisis-red hover:bg-crisis-red-dark transition-colors flex items-center justify-center gap-2"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            {nuevasCount} nuevo{nuevasCount > 1 ? 's' : ''} reporte{nuevasCount > 1 ? 's' : ''} — ver arriba
+          </button>
+        )}
+
+        {error && <EmptyState error />}
+
+        {/* Grid de cards */}
+        {cargando ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-[#161616] border border-[#222] border-l-[3px] border-l-[#333] p-4 animate-pulse">
+                <div className="h-2.5 w-20 bg-[#2A2A2A] mb-3" />
+                <div className="h-5 w-full bg-[#2A2A2A] mb-2" />
+                <div className="h-4 w-3/4 bg-[#2A2A2A]" />
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
-
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-10">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-          {/* Sidebar / editorial index */}
-          <aside className="lg:w-64 xl:w-72 shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-7">
-              {/* Buscador */}
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted dark:text-ink-muted-dark">
-                  <SearchIcon />
-                </span>
-                <input
-                  type="text"
-                  value={queryInput}
-                  onChange={e => setQueryInput(e.target.value)}
-                  placeholder="Buscar en el boletín…"
-                  className="w-full pl-9 pr-4 py-2.5 text-small rounded-none border-b border-rule-strong dark:border-rule-dark bg-transparent text-ink dark:text-ink-dark placeholder-ink-muted dark:placeholder-ink-muted-dark focus:border-crisis-red transition-colors"
-                />
-              </div>
-
-              {/* Idioma */}
-              <div>
-                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-3">Idioma</h3>
-                <div className="flex gap-5">
-                  {(['todos', 'es', 'en'] as const).map(lang => (
-                    <button
-                      key={lang}
-                      onClick={() => setIdiomaActivo(lang)}
-                      className={`text-small pb-0.5 border-b-2 transition-colors ${
-                        idiomaActivo === lang
-                          ? 'border-crisis-red text-ink dark:text-ink-dark font-medium'
-                          : 'border-transparent text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
-                      }`}
-                    >
-                      {lang === 'todos' ? 'Todos' : lang === 'es' ? 'Español' : 'English'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Categorías */}
-              <div>
-                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-3">Secciones</h3>
-                <ul className="-mx-1">
-                  {tagList.map(([key, { label, dot }]) => {
-                    const active = tagActivo === key
-                    return (
-                      <li key={key}>
-                        <button
-                          onClick={() => setTagActivo(key)}
-                          className={`group flex items-center gap-2.5 w-full text-left px-1 py-1.5 text-small transition-colors ${
-                            active
-                              ? 'text-ink dark:text-ink-dark font-medium'
-                              : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? dot : 'bg-rule-strong/40 dark:bg-rule-dark group-hover:bg-ink-muted'}`} />
-                          {label}
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-
-              {/* Estado del servicio */}
-              <div className="border-t border-rule dark:border-rule-dark pt-4">
-                <h3 className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark mb-2">Estado del servicio</h3>
-                <p className="text-caption text-ink-muted dark:text-ink-muted-dark leading-relaxed">
-                  {statsLabel || 'Conectando con fuentes oficiales…'}
-                </p>
-              </div>
-            </div>
-          </aside>
-
-          {/* Main feed */}
-          <main className="flex-1 min-w-0">
-            {/* Section switch */}
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 border-b border-rule dark:border-rule-dark">
-              <div className="flex gap-7">
-                {([['feed', 'Boletín general'], ['medios', 'Medios oficiales']] as const).map(([v, label]) => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    className={`relative pb-3 text-eyebrow uppercase transition-colors ${
-                      view === v
-                        ? 'text-ink dark:text-ink-dark'
-                        : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
-                    }`}
+        ) : noticias.length === 0 && !error ? (
+          <EmptyState degraded={degraded} />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {noticias.map(n => {
+                const meta = TAG_META[n.tag]
+                return (
+                  <a
+                    key={n.id}
+                    href={n.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`
+                      group block bg-[#161616] border border-[#222] rounded-none
+                      border-l-[3px] ${meta?.border ?? 'border-l-[#444]'}
+                      p-4 hover:bg-[#1A1A1A] transition-colors
+                      ${isNuevo(n) ? 'ring-1 ring-inset ring-[#CF1020]/30' : ''}
+                    `}
                   >
-                    {label}
-                    {view === v && <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-crisis-red" />}
-                  </button>
-                ))}
-              </div>
-              {query && total !== null && (
-                <p className="text-caption text-ink-muted dark:text-ink-muted-dark pb-3 tnum">
-                  {total} resultado{total !== 1 ? 's' : ''} para &ldquo;{query}&rdquo;
-                </p>
+                    {/* Primera línea: tag · fuente · tiempo */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className={`font-mono text-[10px] uppercase tracking-widest shrink-0 ${meta?.text ?? 'text-[#888]'}`}>
+                        {meta?.short ?? n.tag}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#555] tracking-wide tnum truncate text-right">
+                        {fuenteLabel(n.fuente_tipo, n.fuente)} · {tiempoRelativo(n.publicado_at)}
+                      </span>
+                    </div>
+
+                    {/* Título */}
+                    <h2 className="font-serif font-semibold text-[1.05rem] leading-snug text-white group-hover:text-[#CF1020] transition-colors mb-2">
+                      {n.titulo}
+                    </h2>
+
+                    {/* Descripción */}
+                    {n.descripcion && (
+                      <p className="text-xs text-[#666] line-clamp-2">
+                        {n.descripcion}
+                      </p>
+                    )}
+
+                    {isNuevo(n) && (
+                      <span className="inline-block mt-1.5 font-mono text-[10px] uppercase tracking-widest text-crisis-red">
+                        Nuevo
+                      </span>
+                    )}
+
+                    {/* Feature 1: botones de compartir */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-3 pt-2 border-t border-[#222]">
+                      <button
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(
+                            `https://wa.me/?text=${encodeURIComponent(n.titulo + '\n' + n.url)}`,
+                            '_blank',
+                            'noopener,noreferrer'
+                          )
+                        }}
+                        className="font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-white transition-colors px-2 py-1"
+                      >
+                        WA
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(
+                            `https://t.me/share/url?url=${encodeURIComponent(n.url)}&text=${encodeURIComponent(n.titulo)}`,
+                            '_blank',
+                            'noopener,noreferrer'
+                          )
+                        }}
+                        className="font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-white transition-colors px-2 py-1"
+                      >
+                        TG
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(n.url).catch(() => {})
+                          }
+                          setCopiadoId(n.id)
+                          setTimeout(() => setCopiadoId(prev => prev === n.id ? null : prev), 1500)
+                        }}
+                        className="font-mono text-[10px] uppercase tracking-widest text-[#555] hover:text-white transition-colors px-2 py-1"
+                      >
+                        {copiadoId === n.id ? '✓' : '🔗'}
+                      </button>
+                    </div>
+                  </a>
+                )
+              })}
+            </div>
+
+            {/* Sentinel de infinite scroll */}
+            <div ref={sentinelRef} className="py-8 text-center">
+              {cargandoMas && (
+                <div className="inline-block w-4 h-4 border border-[#333] border-t-crisis-red rounded-full animate-spin" />
+              )}
+              {!hasMore && noticias.length > 0 && (
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#444]">Fin del feed</p>
               )}
             </div>
-
-            {view === 'feed' ? (
-              <>
-                {/* Banner de nuevas noticias */}
-                {nuevasCount > 0 && (
-                  <button
-                    onClick={() => { setNuevasCount(0); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    className="w-full mb-6 py-2.5 text-eyebrow uppercase text-white bg-crisis-red hover:bg-crisis-red-dark transition-colors flex items-center justify-center gap-2"
-                  >
-                    <LiveSeismo className="[&>span]:bg-white" />
-                    {nuevasCount} nuevo{nuevasCount > 1 ? 's' : ''} reporte{nuevasCount > 1 ? 's' : ''} — ver arriba
-                  </button>
-                )}
-
-                {error && <EmptyState error />}
-
-                {/* Feed list */}
-                {cargando ? (
-                  <div className="divide-y divide-rule dark:divide-rule-dark border-y border-rule dark:border-rule-dark">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="py-6 animate-pulse">
-                        <div className="h-3 w-32 bg-rule dark:bg-rule-dark mb-3" />
-                        <div className="h-5 w-3/4 bg-rule dark:bg-rule-dark mb-2" />
-                        <div className="h-4 w-1/2 bg-rule dark:bg-rule-dark" />
-                      </div>
-                    ))}
-                  </div>
-                ) : noticias.length === 0 && !error ? (
-                  <EmptyState degraded={degraded} />
-                ) : (
-                  <>
-                    <div className="border-t border-rule dark:border-rule-dark">
-                      {noticias.map(n => {
-                        const meta = TAG_META[n.tag]
-                        return (
-                          <a
-                            key={n.id}
-                            href={n.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`
-                              group block border-b border-rule dark:border-rule-dark
-                              border-l-2 ${meta?.border ?? 'border-l-transparent'}
-                              pl-4 sm:pl-5 pr-2 py-6
-                              hover:bg-panel dark:hover:bg-panel-dark transition-colors
-                              ${isNuevo(n) ? 'bg-crisis-red/[0.03] dark:bg-crisis-red/[0.06]' : ''}
-                            `}
-                          >
-                            {/* Dateline */}
-                            <div className="flex items-center gap-2.5 mb-2 text-caption tnum">
-                              {meta && (
-                                <span className={`text-eyebrow uppercase ${meta.text}`}>
-                                  {meta.label}
-                                </span>
-                              )}
-                              <span className="h-3 w-px bg-rule dark:bg-rule-dark" />
-                              <span className="font-medium text-ink-muted dark:text-ink-muted-dark">
-                                {fuenteLabel(n.fuente_tipo, n.fuente)}
-                              </span>
-                              {n.idioma === 'en' && (
-                                <span className="text-[10px] font-semibold tracking-wide px-1 py-px border border-rule-strong/40 dark:border-rule-dark text-ink-muted dark:text-ink-muted-dark">
-                                  EN
-                                </span>
-                              )}
-                              {isNuevo(n) && (
-                                <span className="text-eyebrow uppercase text-crisis-red">Nuevo</span>
-                              )}
-                              <span className="text-ink-muted dark:text-ink-muted-dark ml-auto">
-                                {tiempoRelativo(n.publicado_at)}
-                              </span>
-                            </div>
-                            <h2 className="font-serif text-headline text-ink dark:text-ink-dark leading-snug mb-1.5 group-hover:text-crisis-red transition-colors text-balance">
-                              {n.titulo}
-                            </h2>
-                            {n.descripcion && (
-                              <p className="text-small text-ink-muted dark:text-ink-muted-dark line-clamp-2 max-w-prose mb-3">
-                                {n.descripcion}
-                              </p>
-                            )}
-                            <p className="text-caption text-ink-muted dark:text-ink-muted-dark tnum">
-                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 align-middle" />
-                              Verificación {n.factcheck_confianza}%
-                            </p>
-                          </a>
-                        )
-                      })}
-                    </div>
-                    {/* Sentinel + spinner */}
-                    <div ref={sentinelRef} className="py-8 text-center">
-                      {cargandoMas && (
-                        <div className="inline-block w-5 h-5 border-2 border-rule dark:border-rule-dark border-t-crisis-red rounded-full animate-spin" />
-                      )}
-                      {!hasMore && noticias.length > 0 && (
-                        <p className="text-eyebrow uppercase text-ink-muted dark:text-ink-muted-dark">Fin del boletín</p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div>
-                <div className="border-l-2 border-crisis-blue pl-4 mb-6">
-                  <h3 className="font-serif text-headline text-ink dark:text-ink-dark mb-1">Cronología de medios oficiales</h3>
-                  <p className="text-small text-ink-muted dark:text-ink-muted-dark max-w-prose">Actualizaciones de cuentas verificadas como @Funvisis, @PCivil_Ve y @CruzRojaVe.</p>
-                </div>
-                <div className="relative border-l border-rule-strong/30 dark:border-rule-dark ml-2 space-y-6 pb-4">
-                  {noticias
-                    .filter(n => n.fuente.startsWith('@'))
-                    .map((n) => {
-                      let dotColor = 'bg-crisis-blue'
-                      if (n.fuente.includes('PCivil_Ve') || n.fuente.includes('bomberos')) {
-                        dotColor = 'bg-orange-600'
-                      } else if (n.fuente.includes('CruzRoja')) {
-                        dotColor = 'bg-crisis-red'
-                      }
-                      return (
-                        <div key={`timeline-${n.id}`} className="relative pl-6">
-                          <span className={`absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full ring-4 ring-paper dark:ring-paper-dark ${dotColor}`} />
-                          <a href={n.url} target="_blank" rel="noopener noreferrer" className="group block">
-                            <div className="flex justify-between items-baseline mb-1 text-caption tnum">
-                              <span className="font-semibold text-ink dark:text-ink-dark">{n.fuente}</span>
-                              <span className="text-ink-muted dark:text-ink-muted-dark">{tiempoRelativo(n.publicado_at)}</span>
-                            </div>
-                            <p className="font-serif text-small text-ink dark:text-ink-dark group-hover:text-crisis-red transition-colors">{n.titulo}</p>
-                            {n.descripcion && (
-                              <p className="text-caption text-ink-muted dark:text-ink-muted-dark mt-1 line-clamp-3 max-w-prose">{n.descripcion}</p>
-                            )}
-                            <p className="mt-1.5 text-eyebrow uppercase text-crisis-blue">
-                              Cuenta oficial · verificación {n.factcheck_confianza}%
-                            </p>
-                          </a>
-                        </div>
-                      )
-                    })}
-                  {noticias.filter(n => n.fuente.startsWith('@')).length === 0 && !cargando && (
-                    <div className="pl-6 text-small text-ink-muted dark:text-ink-muted-dark italic py-4">
-                      No hay actualizaciones recientes de las cuentas oficiales.
-                    </div>
-                  )}
-                  {cargando && (
-                    <div className="pl-6 space-y-4 py-2">
-                      <div className="h-12 bg-rule/60 dark:bg-rule-dark/60 animate-pulse" />
-                      <div className="h-12 bg-rule/60 dark:bg-rule-dark/60 animate-pulse" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
+          </>
+        )}
       </div>
+
+      {/* Feature 3: toast de réplica (fixed) */}
+      {replicaToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md bg-[#EAB308] animate-fade-in">
+          <div className="flex items-start justify-between gap-3 p-3">
+            <div className="min-w-0">
+              <p className="font-mono text-[11px] uppercase tracking-widest font-bold text-black">
+                ⚠ Réplica detectada
+              </p>
+              <p className="text-sm font-serif text-black mt-1 leading-snug">
+                {replicaToast}
+              </p>
+            </div>
+            <button
+              onClick={() => setReplicaToast(null)}
+              className="font-mono text-black text-lg leading-none shrink-0 hover:opacity-70 transition-opacity"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
