@@ -5,6 +5,16 @@ import dynamic from 'next/dynamic'
 import { createClient } from '@supabase/supabase-js'
 import type L from 'leaflet'
 
+const LIGHT_TILES = {
+  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+}
+
+const DARK_TILES = {
+  url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+}
+
 // react-leaflet pulls in leaflet at module load, which touches `window` and breaks SSR.
 // We lazy-load each component with ssr:false so the chain never executes on the server.
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false })
@@ -23,16 +33,27 @@ type Sismo = {
   lng: number
 }
 
-function parseMag(titulo: string): number {
-  const match = titulo.match(/M(\d+(?:\.\d+)?)/)
-  return match ? parseFloat(match[1]) : 4
-}
+function useDarkMode() {
+  const [dark, setDark] = useState(false)
 
-function magColor(mag: number): string {
-  if (mag >= 6) return '#DC2626'
-  if (mag >= 5) return '#EA580C'
-  if (mag >= 4) return '#CA8A04'
-  return '#16A34A'
+  useEffect(() => {
+    const root = document.documentElement
+    const update = () => setDark(root.classList.contains('dark'))
+    update()
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          update()
+          break
+        }
+      }
+    })
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  return dark
 }
 
 export function MapaSismos() {
@@ -41,7 +62,7 @@ export function MapaSismos() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ), [])
   const [sismos, setSismos] = useState<Sismo[]>([])
-  const [outline, setOutline] = useState<GeoJSON.GeoJsonObject | null>(null)
+  const dark = useDarkMode()
 
   useEffect(() => {
     // Leaflet touches `window` at import time, so it must be loaded client-side only.
@@ -90,8 +111,8 @@ export function MapaSismos() {
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={dark ? DARK_TILES.attribution : LIGHT_TILES.attribution}
+            url={dark ? DARK_TILES.url : LIGHT_TILES.url}
           />
           {outline && (
             <GeoJSON
