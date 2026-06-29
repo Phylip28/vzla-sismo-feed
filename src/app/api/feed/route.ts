@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const base = () => {
     let q2 = supabase
       .from('noticias')
-      .select('id, titulo, descripcion, url, fuente, fuente_tipo, tag, idioma, publicado_at, factcheck_confianza, factcheck_status', { count: 'exact' })
+      .select('id, titulo, descripcion, url, fuente, fuente_tipo, tag, idioma, publicado_at, factcheck_confianza, factcheck_status, tsunami', { count: 'exact' })
       .eq('factcheck_status', 'aprobado')
     if (tag && TAGS_VALIDOS.includes(tag)) q2 = q2.eq('tag', tag)
     if (lang && (lang === 'es' || lang === 'en')) q2 = q2.eq('idioma', lang)

@@ -14,6 +14,7 @@ type Noticia = {
   publicado_at: string
   factcheck_confianza: number
   factcheck_status: string
+  tsunami?: boolean
   isNew?: boolean
   insertedAt?: number
 }
@@ -65,6 +66,16 @@ function SearchIcon() {
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m21 21-4.34-4.34" />
       <circle cx="11" cy="11" r="8" />
+    </svg>
+  )
+}
+
+function TsunamiIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12h20" />
+      <path d="M2 16c4.5-2 4.5-6 9-6s4.5 4 9 6" />
+      <path d="M2 8c4.5 2 4.5 6 9 6s4.5-4 9-6" />
     </svg>
   )
 }
@@ -469,12 +480,17 @@ export function FeedNoticias({ initialData }: { initialData?: Noticia[] }) {
                       ${isNuevo(n) ? 'ring-1 ring-inset ring-[#CF1020]/30' : ''}
                     `}
                   >
-                    {/* Primera línea: tag · fuente · tiempo */}
+                    {/* Primera línea: tag · tsunami · fuente · tiempo */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className={`font-mono text-[10px] uppercase tracking-widest shrink-0 ${meta?.text ?? 'text-ink-muted dark:text-ink-muted-dark'}`}>
                         {meta?.short ?? n.tag}
                       </span>
-                      <span className="font-mono text-[10px] text-ink-muted dark:text-ink-muted-dark tracking-wide tnum truncate text-right">
+                      {n.tsunami && (
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-crisis-red flex items-center gap-1" title="Alerta de tsunami">
+                          <TsunamiIcon /> Tsunami
+                        </span>
+                      )}
+                      <span className="font-mono text-[10px] text-ink-muted dark:text-ink-muted-dark tracking-wide tnum truncate text-right ml-auto">
                         {fuenteLabel(n.fuente_tipo, n.fuente)} · {tiempoRelativo(n.publicado_at)}
                       </span>
                     </div>

@@ -182,6 +182,7 @@ async function ingestUSGS(supabase: any, nombreFuente: string, url: string): Pro
         publicado_at: new Date(props.time).toISOString(),
         lat: feature.geometry.coordinates[1],
         lng: feature.geometry.coordinates[0],
+        tsunami: Boolean(props.tsunami),
       })
       if (insertError) {
         console.error('[ingest] Error insertando USGS:', insertError.message)

@@ -17,6 +17,7 @@ type Sismo = {
   titulo: string
   url: string
   factcheck_confianza: number
+  tsunami?: boolean
   lat: number
   lng: number
 }
@@ -44,7 +45,7 @@ export function MapaSismos() {
 
     supabase
       .from('noticias')
-      .select('id, titulo, url, factcheck_confianza, lat, lng')
+      .select('id, titulo, url, factcheck_confianza, tsunami, lat, lng')
       .eq('fuente_tipo', 'oficial')
       .eq('factcheck_status', 'aprobado')
       .not('lat', 'is', null)
@@ -78,7 +79,10 @@ export function MapaSismos() {
               <Popup>
                 <p className="font-medium text-sm">{s.titulo}</p>
                 <p className="text-xs text-gray-500">{s.factcheck_confianza}% confianza</p>
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-xs text-crisis-blue hover:underline">
+                {s.tsunami && (
+                  <p className="text-xs font-semibold text-crisis-red mt-1">Alerta de tsunami</p>
+                )}
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-xs text-crisis-blue hover:underline block mt-1">
                   Ver más
                 </a>
               </Popup>
