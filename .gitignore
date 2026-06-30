@@ -20,6 +20,9 @@ repomix-output.xml
 *.tsbuildinfo
 next-env.d.ts
 
+# Test build output (compiled by tsconfig.test.json before node --test)
+/dist-test/
+
 # PWA (workbox / next-pwa)
 public/sw.js
 public/workbox-*.js
